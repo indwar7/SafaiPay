@@ -10,29 +10,40 @@ class AuthService {
     required Function(String) onCodeSent,
     required Function(String) onError,
   }) async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phone,
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await _auth.signInWithCredential(credential);
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        onError(e.message ?? "OTP failed");
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        _verificationId = verificationId;
-        onCodeSent(verificationId);
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        _verificationId = verificationId;
-      },
-    );
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phone,
+        timeout: const Duration(seconds: 60),
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await _auth.signInWithCredential(credential);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          onError(e.message ?? "OTP failed");
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          _verificationId = verificationId;
+          onCodeSent(verificationId);
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+        },
+      );
+    } catch (e) {
+      onError(e.toString());
+    }
   }
 
-  Future<void> verifyOtp(String otp) async {
+  Future<UserCredential> verifyOtp(String otp) async {
     final credential = PhoneAuthProvider.credential(
       verificationId: _verificationId!,
       smsCode: otp,
     );
-    await _auth.signInWithCredential(credential);
+    return await _auth.signInWithCredential(credential);
   }
+
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  User? get currentUser => _auth.currentUser;
 }
