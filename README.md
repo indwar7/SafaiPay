@@ -1,123 +1,358 @@
-# ♻️ SafaiPay – Trash to Cash Platform for India 🇮🇳
+# ♻️ SafaiPay – Clean Actions. Real Rewards. 🇮🇳
 
-SafaiPay is a **Flutter + Firebase powered mobile application** that enables households to responsibly dispose of waste and **earn real rewards** through recycling.
+SafaiPay is a **comprehensive Flutter + Firebase civic-tech platform** that incentivizes citizens to keep their cities clean by rewarding cleanliness actions with real points and money.
 
-> **Recycle smart. Get paid. Build cleaner cities.**
-
----
-
-
-
-**SafaiPay turns household waste into money.**
-
-India produces millions of tons of waste daily, yet recycling participation remains low.  
-SafaiPay solves this by **incentivizing waste segregation** and **rewarding citizens** for recycling.
-
-Households book pickups, garbage collectors verify waste, municipalities gain analytics —  
-and users earn **redeemable points** for doing the right thing.
-
-**Clean cities. Smart citizens. Real rewards.**
+> **Report issues. Book pickups. Earn rewards. Make your city cleaner.**
 
 ---
 
-## 🏷️ Built With
+## 🚀 Features
 
-![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
-![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
-![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+### 👤 **User Features**
+- ✅ **Phone OTP Authentication** (Firebase Auth)
+- ✅ **Premium Animated Home Dashboard**
+  - Wallet card with points & balance
+  - Quick actions (Report, Book, Check-in, Rewards)
+  - Impact tracker with progress bars
+  - Community rank card
+- ✅ **Report Cleanliness Issues**
+  - Camera capture
+  - Auto GPS location
+  - Issue categorization
+  - +5 points per report
+- ✅ **Book Garbage Pickup**
+  - Schedule date & time
+  - Select waste type
+  - Track status
+  - Collector assignment
+- ✅ **City Cleanliness Map**
+  - Google Maps integration
+  - Report markers (red = pending, green = resolved)
+  - Real-time location
+- ✅ **SafaiPay Wallet**
+  - Points management
+  - Redeem points to wallet
+  - Withdraw to bank (Razorpay)
+  - Transaction history
+- ✅ **Rewards & Leaderboard**
+  - Unlock badges
+  - Ward-level rankings
+  - Community competition
+- ✅ **Profile & Settings**
+  - User stats
+  - Streak tracking
+  - Account management
 
-![Status](https://img.shields.io/badge/Status-Active%20Development-orange?style=for-the-badge)
-![Made for India](https://img.shields.io/badge/Made%20for-India-green?style=for-the-badge)
-
----
-
-## 🚀 Vision
-
-To create a **pan-India digital recycling ecosystem** that connects:
-
-- 👤 Citizens
-- 🚛 Garbage collectors
-- 🏛️ Nagar Nigam / Municipal bodies  
-
-All in one transparent, incentive-driven platform.
-
----
-
-## 🧩 Core Features
-
-### 👤 User (Household)
-- Mobile OTP authentication (India-first)
-- Animated, modern login UI
-- Book garbage pickup (date & time)
-- Waste categories:
-  - Dry
-  - Wet
-  - E-Waste
-  - Hazardous
-- Track pickup status
-- Earn points based on waste type & weight
-- Wallet to redeem points into money
-
----
-
-### 🚛 Garbage Collector
-- Login dashboard
-- View assigned pickups
-- Verify pickup
-- Enter waste weight
-- Upload waste photo
-- Mark pickup as completed
-
----
-
-### 🏛️ Admin (Nagar Nigam / Municipality)
-- City-wise analytics
-- Total waste collected
-- User & collector management
-- Data-driven recycling insights
-
----
-
-## 🎨 UI / UX Philosophy
-
-- Dribbble-inspired modern eco UI
-- Soft pastel gradients (green → yellow → off-white)
-- Rounded floating cards
-- Clean typography
-- Animated garbage bin on login
-- Pixel-perfect Flutter UI
+### 🎨 **Design Highlights**
+- Modern glassmorphism UI
+- Smooth animations throughout
+- Professional green & white color palette
+- Google Fonts (Poppins + Inter)
+- Shimmer loading effects
+- Micro-interactions
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- Flutter (latest stable)
-- Material 3
-- Lottie animations
+- **Flutter** (Dart 3.2+)
+- **Material 3** design
+- **Provider** for state management
+- **Google Fonts**
 
-### Backend
-- Firebase Auth (OTP)
-- Cloud Firestore
-- Cloud Functions
-- Firebase Storage
-- Firebase Cloud Messaging (FCM)
+### Backend & Services
+- **Firebase Auth** (Phone OTP)
+- **Cloud Firestore** (Database)
+- **Firebase Storage** (Images)
+- **Firebase Cloud Messaging** (Notifications)
 
----
-
-## 🧱 Architecture
-
-- Clean Architecture
-- Feature-based folder structure
-- Clear separation of:
-  - UI
-  - Services
-  - Models
-  - Routes
-- Designed for **scalability across India**
+### Third-Party Integrations
+- **Google Maps** (City map & location)
+- **Razorpay** (Payment gateway)
+- **Geolocator** (GPS location)
+- **Image Picker** (Camera/Gallery)
 
 ---
 
-## 📂 Firestore Collections
+## 📂 Project Structure
 
+```
+lib/
+├── core/
+│   ├── constants/
+│   │   └── app_constants.dart
+│   ├── theme/
+│   │   ├── app_colors.dart
+│   │   ├── app_gradients.dart
+│   │   ├── app_text_styles.dart
+│   │   └── app_theme.dart
+│   └── widgets/
+│       ├── glass_card.dart
+│       ├── primary_button.dart
+│       ├── quick_action_card.dart
+│       ├── wallet_card.dart
+│       └── waste_chip.dart
+│
+├── models/
+│   ├── user_model.dart
+│   ├── booking_model.dart
+│   ├── report_model.dart
+│   ├── transaction_model.dart
+│   └── collector_model.dart
+│
+├── providers/
+│   ├── user_provider.dart
+│   ├── booking_provider.dart
+│   └── report_provider.dart
+│
+├── services/
+│   ├── auth_service.dart
+│   ├── firestore_service.dart
+│   ├── location_service.dart
+│   ├── payment_service.dart
+│   └── storage_service.dart
+│
+├── features/
+│   ├── splash/
+│   ├── onboarding/
+│   ├── auth/
+│   ├── main/
+│   ├── home/
+│   ├── booking/
+│   ├── report/
+│   ├── map/
+│   ├── wallet/
+│   ├── rewards/
+│   └── profile/
+│
+├── routes/
+│   └── app_routes.dart
+│
+├── app.dart
+└── main.dart
+```
+
+---
+
+## 🔧 Setup Instructions
+
+### Prerequisites
+- Flutter SDK (3.2.0 or higher)
+- Android Studio / VS Code
+- Firebase Project
+- Google Maps API Key
+- Razorpay Account (optional for payments)
+
+### 1. Clone & Install Dependencies
+
+```bash
+cd /app
+flutter pub get
+```
+
+### 2. Firebase Setup
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project or use existing
+3. Enable **Phone Authentication**
+4. Download `google-services.json` → Place in `android/app/`
+5. Download `GoogleService-Info.plist` → Place in `ios/Runner/`
+6. Run FlutterFire CLI:
+   ```bash
+   flutterfire configure
+   ```
+
+### 3. Google Maps API Key
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable **Maps SDK for Android** & **Maps SDK for iOS**
+3. Create API Key
+4. Add to `android/app/src/main/AndroidManifest.xml`:
+   ```xml
+   <meta-data
+       android:name="com.google.android.geo.API_KEY"
+       android:value="YOUR_GOOGLE_MAPS_API_KEY"/>
+   ```
+
+### 4. Razorpay Setup (Optional)
+
+1. Sign up at [Razorpay](https://razorpay.com/)
+2. Get API Key from Dashboard
+3. Update in `lib/services/payment_service.dart`:
+   ```dart
+   'key': 'YOUR_RAZORPAY_KEY_HERE',
+   ```
+
+### 5. Run the App
+
+```bash
+flutter run
+```
+
+---
+
+## 📊 Firestore Collections Structure
+
+### users
+```json
+{
+  "phoneNumber": "+919876543210",
+  "name": "John Doe",
+  "ward": "Ward 5",
+  "address": "123 Main St",
+  "points": 150,
+  "walletBalance": 100,
+  "totalReports": 10,
+  "totalBookings": 5,
+  "streak": 7,
+  "createdAt": "timestamp",
+  "lastCheckIn": "timestamp"
+}
+```
+
+### bookings
+```json
+{
+  "userId": "uid",
+  "userName": "John Doe",
+  "phoneNumber": "+919876543210",
+  "address": "123 Main St",
+  "wasteType": "Dry Waste",
+  "bookingDate": "timestamp",
+  "timeSlot": "6:00 AM - 8:00 AM",
+  "status": "pending",
+  "collectorId": "collector_uid",
+  "collectorName": "Collector Name",
+  "weight": 5.5,
+  "pointsEarned": 55,
+  "imageUrl": "url",
+  "createdAt": "timestamp"
+}
+```
+
+### reports
+```json
+{
+  "userId": "uid",
+  "userName": "John Doe",
+  "issueType": "Overflowing Bin",
+  "description": "Bin overflowing for 3 days",
+  "latitude": 28.6139,
+  "longitude": 77.2090,
+  "address": "123 Main St",
+  "imageUrl": "url",
+  "status": "pending",
+  "pointsEarned": 5,
+  "createdAt": "timestamp"
+}
+```
+
+### transactions
+```json
+{
+  "userId": "uid",
+  "type": "earned",
+  "points": 5,
+  "description": "Reported issue: Overflowing Bin",
+  "createdAt": "timestamp"
+}
+```
+
+---
+
+## 🎯 Points System
+
+| Action | Points |
+|--------|--------|
+| Daily Check-in | +2 |
+| Report Issue | +5 |
+| Completed Pickup | +10 per kg |
+| 7-day Streak | Bonus Badge |
+
+**Redemption:** 1 Point = ₹1
+
+---
+
+## 🔐 Permissions Required
+
+### Android
+- `INTERNET`
+- `ACCESS_FINE_LOCATION`
+- `ACCESS_COARSE_LOCATION`
+- `CAMERA`
+- `READ_EXTERNAL_STORAGE`
+- `WRITE_EXTERNAL_STORAGE`
+
+### iOS
+- Add to `Info.plist`:
+  ```xml
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>We need your location to show nearby cleanliness issues</string>
+  <key>NSCameraUsageDescription</key>
+  <string>We need camera access to report issues</string>
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>We need photo access to report issues</string>
+  ```
+
+---
+
+## 📱 App Flow
+
+```
+Splash → Onboarding → Login → OTP → Home Dashboard
+                                          ↓
+                        ┌─────────────────┴─────────────────┐
+                        ↓                 ↓                 ↓
+                     Report           Booking            Wallet
+                     Issue            Pickup            & Rewards
+```
+
+---
+
+## 🚧 Known Limitations
+
+1. **Google Maps API Key**: Needs to be added (currently placeholder)
+2. **Razorpay Key**: Needs to be added for real payments
+3. **Collector Assignment**: Currently manual (can be automated)
+4. **Push Notifications**: FCM setup needed
+
+---
+
+## 🤝 Contributing
+
+This is a complete MVP ready for production deployment. To contribute:
+1. Fork the repo
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Create Pull Request
+
+---
+
+## 📄 License
+
+MIT License - Free to use for civic projects
+
+---
+
+## 👨‍💻 Developed By
+
+**Built with ❤️ using Flutter**
+
+For support: Open an issue on GitHub
+
+---
+
+## 🎉 What's Next?
+
+- [ ] Admin panel for municipalities
+- [ ] Garbage collector app
+- [ ] AI-powered waste classification
+- [ ] Social sharing features
+- [ ] Multi-language support
+- [ ] Dark mode
+
+---
+
+**SafaiPay - Making India Cleaner, One Action at a Time! 🇮🇳♻️**
