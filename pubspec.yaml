@@ -59,9 +59,11 @@ flutter:
   assets:
     - assets/lottie/
     - assets/images/
+    - assets/icons/
 
 flutter_native_splash:
-  color: "#0E0E0E"
-  image: assets/images/splash.png
+  color: "#F4F7F5"
+  image: assets/images/splash_icon.png
   android: true
   ios: true
+  color_dark: "#F4F7F5"
