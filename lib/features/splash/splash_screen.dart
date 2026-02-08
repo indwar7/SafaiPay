@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
-import '../core/theme/app_colors.dart';
-import '../routes/app_routes.dart';
+import '../../core/theme/app_colors.dart';
+import '../../routes/app_routes.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -94,7 +94,8 @@ class _SplashScreenState extends State<SplashScreen>
                 builder: (context, child) {
                   return Positioned(
                     left: (index % 5) * (MediaQuery.of(context).size.width / 5),
-                    top: (index ~/ 5) * (MediaQuery.of(context).size.height / 4) +
+                    top: (index ~/ 5) *
+                            (MediaQuery.of(context).size.height / 4) +
                         (50 * _animationController.value),
                     child: Opacity(
                       opacity: 0.1 * (1 - _animationController.value),
@@ -108,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen>
                 },
               );
             }),
-            
+
             // Main content
             Center(
               child: AnimatedBuilder(
@@ -140,7 +141,8 @@ class _SplashScreenState extends State<SplashScreen>
                                 borderRadius: BorderRadius.circular(35),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primaryGreen.withOpacity(0.4),
+                                    color:
+                                        AppColors.primaryGreen.withOpacity(0.4),
                                     blurRadius: 40,
                                     offset: const Offset(0, 20),
                                   ),
@@ -155,7 +157,7 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                         ),
                         const SizedBox(height: 32),
-                        
+
                         // Animated app name
                         AnimatedTextKit(
                           animatedTexts: [
@@ -175,15 +177,16 @@ class _SplashScreenState extends State<SplashScreen>
                           displayFullTextOnTap: true,
                           stopPauseOnTap: true,
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Animated tagline
                         FadeTransition(
                           opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
                             CurvedAnimation(
                               parent: _animationController,
-                              curve: const Interval(0.6, 1.0, curve: Curves.easeIn),
+                              curve: const Interval(0.6, 1.0,
+                                  curve: Curves.easeIn),
                             ),
                           ),
                           child: AnimatedTextKit(
@@ -201,15 +204,16 @@ class _SplashScreenState extends State<SplashScreen>
                             totalRepeatCount: 1,
                           ),
                         ),
-                        
+
                         const SizedBox(height: 50),
-                        
+
                         // Loading indicator
                         FadeTransition(
                           opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
                             CurvedAnimation(
                               parent: _animationController,
-                              curve: const Interval(0.7, 1.0, curve: Curves.easeIn),
+                              curve: const Interval(0.7, 1.0,
+                                  curve: Curves.easeIn),
                             ),
                           ),
                           child: SizedBox(

@@ -20,17 +20,22 @@ class _RewardsScreenState extends State<RewardsScreen> {
   late ConfettiController _confettiController;
 
   final List<Badge> _badges = [
-    Badge('Eco Warrior', 'Complete 10 reports', Icons.eco, 10, AppColors.primaryGreen),
-    Badge('Clean Streak', '7 day check-in streak', Icons.local_fire_department, 7, AppColors.red),
+    Badge('Eco Warrior', 'Complete 10 reports', Icons.eco, 10,
+        AppColors.primaryGreen),
+    Badge('Clean Streak', '7 day check-in streak', Icons.local_fire_department,
+        7, AppColors.red),
     Badge('Point Master', 'Earn 100 points', Icons.star, 100, AppColors.gold),
-    Badge('Booking Pro', 'Book 5 pickups', Icons.calendar_today, 5, AppColors.blue),
-    Badge('Community Hero', 'Top 10 in ward', Icons.emoji_events, 1, AppColors.orange),
+    Badge('Booking Pro', 'Book 5 pickups', Icons.calendar_today, 5,
+        AppColors.blue),
+    Badge('Community Hero', 'Top 10 in ward', Icons.emoji_events, 1,
+        AppColors.orange),
   ];
 
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 3));
     _loadLeaderboard();
   }
 
@@ -319,7 +324,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                         color: AppColors.black,
                       ),
                     ),
-                    if (isCurrentUser) ..[
+                    if (isCurrentUser) ...[
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(

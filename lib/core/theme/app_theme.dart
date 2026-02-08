@@ -43,12 +43,10 @@ class AppTheme {
       ),
       contentPadding: const EdgeInsets.all(16),
     ),
-    cardTheme: CardTheme(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      color: AppColors.white,
-    ),
+    //cardTheme: const CardTheme(
+    //  color: AppColors.white,
+    //  elevation: 4,
+    //  margin: EdgeInsets.all(8),
   );
+  //);
 }

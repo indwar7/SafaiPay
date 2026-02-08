@@ -44,7 +44,7 @@ class PrimaryButton extends StatelessWidget {
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (icon != null) ..[
+                  if (icon != null) ...[
                     Icon(icon, color: Colors.white),
                     const SizedBox(width: 8),
                   ],

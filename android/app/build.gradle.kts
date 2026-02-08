@@ -40,6 +40,21 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+    
+    // Suppress Kotlin compilation errors for deprecated APIs
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        kotlinOptions {
+            freeCompilerArgs += listOf("-Xsuppress-version-warnings")
+            allWarningsAsErrors = false
+        }
+    }
+}
+
+dependencies {
+    // Exclude fluttertoast from the build as it's not used and has compatibility issues
+    configurations.all {
+        exclude(group = "io.github.ponnamkarthik", module = "fluttertoast")
+    }
 }
 
 flutter {

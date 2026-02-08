@@ -6,7 +6,6 @@ import '../../services/firestore_service.dart';
 import '../../services/payment_service.dart';
 import '../../models/transaction_model.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/primary_button.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
