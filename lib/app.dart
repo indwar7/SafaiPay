@@ -21,7 +21,7 @@ class GarbageApp extends StatelessWidget {
         title: 'SafaiPay',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        initialRoute: AppRoutes.splash,
+        initialRoute: AppRoutes.mainApp,  // CHANGED THIS LINE DIRECTLY TO HOME SCREEN
         onGenerateRoute: AppRoutes.onGenerateRoute,
       ),
     );

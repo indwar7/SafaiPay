@@ -135,7 +135,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
           crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 0.9,
+          childAspectRatio: 0.8,
         ),
         itemCount: _badges.length,
         itemBuilder: (context, index) {

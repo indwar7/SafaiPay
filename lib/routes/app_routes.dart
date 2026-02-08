@@ -23,7 +23,7 @@ class AppRoutes {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
       case onboarding:
-        return MaterialPageRoute(builder: (_) => const OnboardingScreen());
+        return MaterialPageRoute(builder: (_) => const OnboardingScreenPremium());
       case login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case otpVerification:
@@ -55,7 +55,7 @@ class AppRoutes {
 
   static Map<String, WidgetBuilder> routes = {
     splash: (_) => const SplashScreen(),
-    onboarding: (_) => const OnboardingScreen(),
+    onboarding: (_) => const OnboardingScreenPremium(),
     login: (_) => const LoginScreen(),
     mainApp: (_) => const MainApp(),
     bookPickup: (_) => const BookPickupScreen(),

@@ -51,10 +51,6 @@ android {
 }
 
 dependencies {
-    // Exclude fluttertoast from the build as it's not used and has compatibility issues
-    configurations.all {
-        exclude(group = "io.github.ponnamkarthik", module = "fluttertoast")
-    }
 }
 
 flutter {

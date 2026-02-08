@@ -15,11 +15,12 @@ class MainApp extends StatefulWidget {
   State<MainApp> createState() => _MainAppState();
 }
 
-class _MainAppState extends State<MainApp> {
+class _MainAppState extends State<MainApp> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  late AnimationController _animationController;
 
   final List<Widget> _screens = [
-    const HomeScreen(),
+    const HomeScreenProfessional(),
     const MapScreen(),
     const WalletScreen(),
     const ProfileScreen(),
@@ -29,6 +30,11 @@ class _MainAppState extends State<MainApp> {
   void initState() {
     super.initState();
     _loadUser();
+    
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   void _loadUser() {
@@ -41,61 +47,184 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
-      extendBody: true,
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 30,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
+      backgroundColor: const Color(0xFFF4F7F5),
+      body: Stack(
+        children: [
+          // Main content with animated transitions
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeInOut,
+            switchOutCurve: Curves.easeInOut,
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.1, 0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              );
             },
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.white,
-            selectedItemColor: AppColors.primaryGreen,
-            unselectedItemColor: AppColors.greyText,
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            elevation: 0,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
-                label: 'Home',
+            child: Container(
+              key: ValueKey<int>(_currentIndex),
+              child: _screens[_currentIndex],
+            ),
+          ),
+
+          // Premium Navigation Bar (Floating at bottom)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildPremiumNavigationBar(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumNavigationBar() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      height: 70,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(35),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 30,
+            spreadRadius: 0,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: AppColors.primaryGreen.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: -5,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(
+            icon: Icons.home_rounded,
+            label: 'Home',
+            index: 0,
+          ),
+          _buildNavItem(
+            icon: Icons.map_rounded,
+            label: 'Map',
+            index: 1,
+          ),
+          _buildNavItem(
+            icon: Icons.account_balance_wallet_rounded,
+            label: 'Wallet',
+            index: 2,
+          ),
+          _buildNavItem(
+            icon: Icons.person_rounded,
+            label: 'Profile',
+            index: 3,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    bool isActive = _currentIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+        _animationController.forward(from: 0);
+        
+        // Haptic feedback
+        // HapticFeedback.lightImpact();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: EdgeInsets.symmetric(
+          horizontal: isActive ? 20 : 12,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          gradient: isActive
+              ? const LinearGradient(
+                  colors: [
+                    Color(0xFF2ECC71),
+                    Color(0xFF27AE60),
+                  ],
+                )
+              : null,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: AppColors.primaryGreen.withOpacity(0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon with scale animation
+            AnimatedScale(
+              scale: isActive ? 1.1 : 1.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: Icon(
+                icon,
+                color: isActive ? Colors.white : const Color(0xFF666666),
+                size: 24,
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.map_outlined),
-                activeIcon: Icon(Icons.map),
-                label: 'Map',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.account_balance_wallet_outlined),
-                activeIcon: Icon(Icons.account_balance_wallet),
-                label: 'Wallet',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
-                label: 'Profile',
+            ),
+            
+            // Label (only shown when active)
+            if (isActive) ...[
+              const SizedBox(width: 8),
+              AnimatedOpacity(
+                opacity: isActive ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: AnimatedSlide(
+                  offset: isActive ? Offset.zero : const Offset(-0.5, 0),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
               ),
             ],
-          ),
+          ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 }

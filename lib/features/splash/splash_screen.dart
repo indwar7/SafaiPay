@@ -56,13 +56,11 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _checkAuthStatus() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
+    
       Navigator.of(context).pushReplacementNamed(AppRoutes.mainApp);
-    } else {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
-    }
-  }
+    } 
+     
+  
 
   @override
   void dispose() {
