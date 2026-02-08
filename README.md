@@ -310,49 +310,7 @@ Splash → Onboarding → Login → OTP → Home Dashboard
 
 ---
 
-## 🚧 Known Limitations
 
-1. **Google Maps API Key**: Needs to be added (currently placeholder)
-2. **Razorpay Key**: Needs to be added for real payments
-3. **Collector Assignment**: Currently manual (can be automated)
-4. **Push Notifications**: FCM setup needed
 
----
-
-## 🤝 Contributing
-
-This is a complete MVP ready for production deployment. To contribute:
-1. Fork the repo
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Create Pull Request
-
----
-
-## 📄 License
-
-MIT License - Free to use for civic projects
-
----
-
-## 👨‍💻 Developed By
-
-**Built with ❤️ using Flutter**
-
-For support: Open an issue on GitHub
-
----
-
-## 🎉 What's Next?
-
-- [ ] Admin panel for municipalities
-- [ ] Garbage collector app
-- [ ] AI-powered waste classification
-- [ ] Social sharing features
-- [ ] Multi-language support
-- [ ] Dark mode
-
----
 
 **SafaiPay - Making India Cleaner, One Action at a Time! 🇮🇳♻️**
