@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:math' as math;
-import 'dart:ui';
 import '../../providers/user_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../routes/app_routes.dart';
@@ -15,111 +13,43 @@ class HomeScreenProfessional extends StatefulWidget {
 
 class _HomeScreenProfessionalState extends State<HomeScreenProfessional>
     with TickerProviderStateMixin {
-  final ScrollController _scrollController = ScrollController();
-  double _scrollOffset = 0.0;
-
   late AnimationController _shimmerController;
-  late AnimationController _cardRotateController;
 
   @override
   void initState() {
     super.initState();
-
-    _scrollController.addListener(() {
-      setState(() {
-        _scrollOffset = _scrollController.offset;
-      });
-    });
-
-    // Shimmer effect for card
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 2500),
     )..repeat();
-
-    // Subtle card rotation on tilt
-    _cardRotateController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     _shimmerController.dispose();
-    _cardRotateController.dispose();
     super.dispose();
-  }
-
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: AppColors.scaffoldBg,
       body: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
           final user = userProvider.currentUser;
-
-          return Stack(
-            children: [
-              // Sophisticated background
-              _buildProfessionalBackground(),
-
-              // Main scrollable content
-              CustomScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  // Minimal Header
-                  SliverToBoxAdapter(
-                    child: _buildMinimalHeader(user?.name ?? 'User'),
-                  ),
-
-                  // Premium Debit Card
-                  SliverToBoxAdapter(
-                    child: _buildPremiumDebitCard(
-                      balance: (user?.walletBalance ?? 0).toDouble(),
-                      points: user?.points ?? 0,
-                    ),
-                  ),
-
-                  // Stats Cards (Animated on scroll)
-                  SliverToBoxAdapter(
-                    child: _buildAnimatedStatsSection(
-                      reports: user?.totalReports ?? 0,
-                      pickups: user?.totalBookings ?? 0,
-                      streak: user?.streak ?? 0,
-                    ),
-                  ),
-
-                  // Quick Actions - Card Style
-                  SliverToBoxAdapter(
-                    child: _buildQuickActionsCards(userProvider),
-                  ),
-
-                  // Recent Activity Card
-                  SliverToBoxAdapter(
-                    child: _buildRecentActivityCard(),
-                  ),
-
-                  // Achievements Card
-                  SliverToBoxAdapter(
-                    child: _buildAchievementsCard(user?.points ?? 0),
-                  ),
-
-                  // Bottom spacing
-                  const SliverToBoxAdapter(
-                    child: SizedBox(height: 120),
-                  ),
-                ],
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(child: _buildHeader(user?.name ?? 'User')),
+              SliverToBoxAdapter(
+                child: _buildWalletCard(
+                  balance: (user?.walletBalance ?? 25453).toDouble(),
+                ),
               ),
+              SliverToBoxAdapter(child: _buildQuickActions(userProvider)),
+              SliverToBoxAdapter(child: _buildQuickSend()),
+              SliverToBoxAdapter(child: _buildRecentActivity()),
+              const SliverToBoxAdapter(child: SizedBox(height: 120)),
             ],
           );
         },
@@ -127,805 +57,78 @@ class _HomeScreenProfessionalState extends State<HomeScreenProfessional>
     );
   }
 
-  Widget _buildProfessionalBackground() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment.topRight,
-          radius: 1.5,
-          colors: [
-            Color(0xFF1A1A1A),
-            Color(0xFF0F0F0F),
-            Color(0xFF000000),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          // Subtle mesh gradient
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF2ECC71).withOpacity(0.05),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 100,
-            left: -150,
-            child: Container(
-              width: 500,
-              height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF27AE60).withOpacity(0.03),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // ── Header ──────────────────────────────────────────────────
 
-  Widget _buildMinimalHeader(String userName) {
+  Widget _buildHeader(String userName) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
+      padding: const EdgeInsets.fromLTRB(24, 60, 24, 20),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _getGreeting(),
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                userName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
-          ),
           Container(
-            padding: const EdgeInsets.all(12),
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-              ),
+              color: AppColors.primaryLime,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.primaryGreen, width: 2),
             ),
-            child: Stack(
+            child: const Icon(Icons.person, color: AppColors.black, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.white,
-                  size: 24,
-                ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF2ECC71),
-                      shape: BoxShape.circle,
-                    ),
+                Text(
+                  userName,
+                  style: const TextStyle(
+                    color: AppColors.greyText,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPremiumDebitCard({
-    required double balance,
-    required int points,
-  }) {
-    final cardOffset = (_scrollOffset * 0.3).clamp(0.0, 50.0);
-
-    return Transform.translate(
-      offset: Offset(0, -cardOffset),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: AnimatedBuilder(
-          animation: _cardRotateController,
-          builder: (context, child) {
-            return Transform(
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.001)
-                ..rotateX(_cardRotateController.value * 0.02)
-                ..rotateY(_cardRotateController.value * 0.02),
-              alignment: Alignment.center,
-              child: child,
-            );
-          },
-          child: Container(
-            height: 220,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF2ECC71),
-                  Color(0xFF27AE60),
-                  Color(0xFF1E8449),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF2ECC71).withOpacity(0.4),
-                  blurRadius: 40,
-                  spreadRadius: 0,
-                  offset: const Offset(0, 20),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Shimmer effect
-                AnimatedBuilder(
-                  animation: _shimmerController,
-                  builder: (context, child) {
-                    return Positioned(
-                      left: -200 + (_shimmerController.value * 600),
-                      top: -50,
-                      child: Transform.rotate(
-                        angle: 0.5,
-                        child: Container(
-                          width: 100,
-                          height: 400,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.white.withOpacity(0.0),
-                                Colors.white.withOpacity(0.3),
-                                Colors.white.withOpacity(0.0),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-                // Card content
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Card header
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
-                              ),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(
-                                  Icons.eco,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                                SizedBox(width: 6),
-                                Text(
-                                  'SafaiPay',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Chip simulation
-                          Container(
-                            width: 50,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Stack(
-                                children: [
-                                  Positioned(
-                                    left: 8,
-                                    top: 8,
-                                    child: Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.3),
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: 8,
-                                    top: 8,
-                                    child: Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.3),
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    left: 8,
-                                    bottom: 8,
-                                    child: Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.3),
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: 8,
-                                    bottom: 8,
-                                    child: Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.3),
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Balance section
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'TOTAL BALANCE',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                '₹',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w300,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              TweenAnimationBuilder<double>(
-                                duration: const Duration(milliseconds: 1500),
-                                tween: Tween(begin: 0, end: balance),
-                                curve: Curves.easeOutCubic,
-                                builder: (context, value, child) {
-                                  return Text(
-                                    value.toStringAsFixed(2),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 42,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: -1,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      // Card footer
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Points badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.2),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.stars_rounded,
-                                  color: Color(0xFFFFD700),
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '$points',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'PTS',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // Contactless icon
-                          const Icon(
-                            Icons.contactless,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAnimatedStatsSection({
-    required int reports,
-    required int pickups,
-    required int streak,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Your Impact',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildStatsCard(
-            'Reports Submitted',
-            reports,
-            Icons.report_gmailerrorred_outlined,
-            const Color(0xFFFF6B6B),
-            0,
-          ),
-          const SizedBox(height: 12),
-          _buildStatsCard(
-            'Pickups Scheduled',
-            pickups,
-            Icons.local_shipping_outlined,
-            const Color(0xFF4ECDC4),
-            100,
-          ),
-          const SizedBox(height: 12),
-          _buildStatsCard(
-            'Day Streak',
-            streak,
-            Icons.local_fire_department_outlined,
-            const Color(0xFFFFBE0B),
-            200,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsCard(
-    String label,
-    int value,
-    IconData icon,
-    Color color,
-    int delay,
-  ) {
-    final opacity = (1 - (_scrollOffset / 300)).clamp(0.0, 1.0);
-    final translateY = (_scrollOffset * 0.2).clamp(0.0, 50.0);
-
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 600 + delay),
-      tween: Tween(begin: 0.0, end: 1.0),
-      curve: Curves.easeOutCubic,
-      builder: (context, animValue, child) {
-        return Opacity(
-          opacity: opacity,
-          child: Transform.translate(
-            offset: Offset(0, translateY * (1 - animValue)),
-            child: Transform.scale(
-              scale: 0.9 + (animValue * 0.1),
-              child: child,
-            ),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  TweenAnimationBuilder<int>(
-                    duration: const Duration(milliseconds: 1000),
-                    tween: IntTween(begin: 0, end: value),
-                    curve: Curves.easeOut,
-                    builder: (context, val, child) {
-                      return Text(
-                        val.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.5,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.white.withOpacity(0.3),
-                size: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionsCards(UserProvider userProvider) {
-    final actions = [
-      {
-        'title': 'Report Issue',
-        'subtitle': 'Found garbage? Report it',
-        'icon': Icons.report_gmailerrorred,
-        'color': const Color(0xFFFF6B6B),
-        'route': AppRoutes.reportIssue,
-      },
-      {
-        'title': 'Schedule Pickup',
-        'subtitle': 'Book a collection service',
-        'icon': Icons.event_available,
-        'color': const Color(0xFF4ECDC4),
-        'route': AppRoutes.bookPickup,
-      },
-      {
-        'title': 'Daily Check-in',
-        'subtitle': 'Maintain your streak',
-        'icon': Icons.verified_user,
-        'color': const Color(0xFF2ECC71),
-        'route': null,
-      },
-      {
-        'title': 'View Rewards',
-        'subtitle': 'See what you can redeem',
-        'icon': Icons.redeem,
-        'color': const Color(0xFFFFBE0B),
-        'route': AppRoutes.rewards,
-      },
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Quick Actions',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 20),
-          ...List.generate(actions.length, (index) {
-            final action = actions[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildActionCard(
-                title: action['title'] as String,
-                subtitle: action['subtitle'] as String,
-                icon: action['icon'] as IconData,
-                color: action['color'] as Color,
-                delay: index * 100,
-                onTap: () {
-                  if (action['route'] != null) {
-                    Navigator.pushNamed(context, action['route'] as String);
-                  } else {
-                    _handleCheckIn(userProvider);
-                  }
-                },
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required int delay,
-    required VoidCallback onTap,
-  }) {
-    final cardOffset = (_scrollOffset * 0.15).clamp(0.0, 30.0);
-
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 600 + delay),
-      tween: Tween(begin: 0.0, end: 1.0),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, cardOffset * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
-        );
-      },
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.08),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      color.withOpacity(0.2),
-                      color.withOpacity(0.1),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const Row(
                   children: [
                     Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
+                      'Welcome Back ',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
+                        color: AppColors.black,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                    Text('\u{1F44B}', style: TextStyle(fontSize: 20)),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white.withOpacity(0.3),
-                  size: 16,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecentActivityCard() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Recent Activity',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.3,
+              ],
             ),
           ),
-          const SizedBox(height: 20),
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.08),
-              ),
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.greyBorder),
             ),
-            child: Column(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _buildActivityItem(
-                  'Report Submitted',
-                  'Park Street, Sector 5',
-                  '2 hours ago',
-                  Icons.check_circle,
-                  const Color(0xFF2ECC71),
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryLime,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.add, size: 14, color: AppColors.black),
                 ),
-                const Divider(
-                  color: Color(0xFF2A2A2A),
-                  height: 32,
-                ),
-                _buildActivityItem(
-                  'Pickup Scheduled',
-                  'Residential Area, Block A',
-                  'Yesterday',
-                  Icons.local_shipping,
-                  const Color(0xFF4ECDC4),
-                ),
-                const Divider(
-                  color: Color(0xFF2A2A2A),
-                  height: 32,
-                ),
-                _buildActivityItem(
-                  'Points Earned',
-                  'Daily check-in bonus',
-                  '2 days ago',
-                  Icons.stars,
-                  const Color(0xFFFFBE0B),
+                const SizedBox(width: 6),
+                const Text(
+                  'Set Budget',
+                  style: TextStyle(
+                    color: AppColors.black,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -935,137 +138,203 @@ class _HomeScreenProfessionalState extends State<HomeScreenProfessional>
     );
   }
 
-  Widget _buildActivityItem(
-    String title,
-    String subtitle,
-    String time,
-    IconData icon,
-    Color color,
-  ) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.4),
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Text(
-          time,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.3),
-            fontSize: 12,
-          ),
-        ),
-      ],
-    );
-  }
+  // ── Wallet Card (Dark VISA card) ────────────────────────────
 
-  Widget _buildAchievementsCard(int points) {
+  Widget _buildWalletCard({required double balance}) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFFFBE0B),
-              Color(0xFFFF9500),
-            ],
-          ),
+          color: AppColors.cardDark,
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFBE0B).withOpacity(0.3),
+              color: AppColors.black.withValues(alpha: 0.2),
               blurRadius: 30,
               offset: const Offset(0, 15),
             ),
           ],
         ),
-        child: Row(
+        child: Stack(
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.emoji_events,
-                color: Colors.white,
-                size: 32,
-              ),
+            // Shimmer sweep
+            AnimatedBuilder(
+              animation: _shimmerController,
+              builder: (context, child) {
+                return Positioned(
+                  left: -150 + (_shimmerController.value * 550),
+                  top: -60,
+                  child: Transform.rotate(
+                    angle: 0.4,
+                    child: Container(
+                      width: 60,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.white.withValues(alpha: 0.0),
+                            Colors.white.withValues(alpha: 0.05),
+                            Colors.white.withValues(alpha: 0.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Community Rank',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+            // Card content
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // VISA + Star
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'VISA',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        fontStyle: FontStyle.italic,
+                        letterSpacing: 2,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Top ${((points / 10).ceil())}%',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -1,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLime.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.star,
+                          color: AppColors.primaryLime, size: 20),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Balance
+                Text(
+                  'Balance',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 13,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Keep up the great work!',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 12,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text(
+                        '\$ ',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.white,
-              size: 20,
+                    TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 1200),
+                      tween: Tween(begin: 0, end: balance),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, _) => Text(
+                        value.toStringAsFixed(2),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 36,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Card number + contactless
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        _cardDots(),
+                        const SizedBox(width: 12),
+                        _cardDots(),
+                        const SizedBox(width: 12),
+                        _cardDots(),
+                        const SizedBox(width: 12),
+                        Text(
+                          '7281',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3)),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.add,
+                              color: Colors.white, size: 14),
+                        ),
+                        const SizedBox(width: 12),
+                        const Icon(Icons.contactless,
+                            color: Colors.white, size: 28),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Name + Expiry
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'William Current',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        const DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryLime,
+                            shape: BoxShape.circle,
+                          ),
+                          child: SizedBox(width: 6, height: 6),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Exp 07/26',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
@@ -1073,26 +342,326 @@ class _HomeScreenProfessionalState extends State<HomeScreenProfessional>
     );
   }
 
-  void _handleCheckIn(UserProvider userProvider) async {
-    await userProvider.dailyCheckIn();
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
+  Widget _cardDots() {
+    return Row(
+      children: List.generate(
+        4,
+        (_) => Container(
+          margin: const EdgeInsets.only(right: 2),
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.5),
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Quick Actions ───────────────────────────────────────────
+
+  Widget _buildQuickActions(UserProvider userProvider) {
+    final actions = [
+      _QuickAction(
+        icon: Icons.send_rounded,
+        label: 'Send',
+        onTap: () {},
+      ),
+      _QuickAction(
+        icon: Icons.receipt_long_rounded,
+        label: 'Bill',
+        onTap: () => Navigator.pushNamed(context, AppRoutes.reportIssue),
+      ),
+      _QuickAction(
+        icon: Icons.phone_android_rounded,
+        label: 'Mobile',
+        onTap: () => Navigator.pushNamed(context, AppRoutes.bookPickup),
+      ),
+      _QuickAction(
+        icon: Icons.grid_view_rounded,
+        label: 'More',
+        onTap: () => Navigator.pushNamed(context, AppRoutes.rewards),
+      ),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: actions.map((a) => _buildQuickActionItem(a)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionItem(_QuickAction action) {
+    return GestureDetector(
+      onTap: action.onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.greyBorder),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(action.icon, color: AppColors.black, size: 26),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            action.label,
+            style: const TextStyle(
+              color: AppColors.greyText,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Quick Send ──────────────────────────────────────────────
+
+  Widget _buildQuickSend() {
+    final contacts = ['Azie', 'Chaoir', 'Fandit', 'Happy', 'Nayu'];
+    const colors = [
+      Color(0xFFFF6B6B),
+      Color(0xFF4ECDC4),
+      Color(0xFFFFE66D),
+      Color(0xFF95E1D3),
+      Color(0xFFF38181),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+      child: Column(
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text('Check-in successful! +2 points'),
+              Text(
+                'Quick Send',
+                style: TextStyle(
+                  color: AppColors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    'See all',
+                    style: TextStyle(
+                      color: AppColors.greyText,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios,
+                      size: 12, color: AppColors.greyText),
+                ],
+              ),
             ],
           ),
-          backgroundColor: const Color(0xFF2ECC71),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 80,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: contacts.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 20),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: colors[index % colors.length],
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.white,
+                            width: 2,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            contacts[index][0],
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        contacts[index],
+                        style: const TextStyle(
+                          color: AppColors.greyText,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
-    }
+        ],
+      ),
+    );
   }
+
+  // ── Recent Activity ─────────────────────────────────────────
+
+  Widget _buildRecentActivity() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+      child: Column(
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Activity',
+                style: TextStyle(
+                  color: AppColors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    'See all',
+                    style: TextStyle(
+                      color: AppColors.greyText,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios,
+                      size: 12, color: AppColors.greyText),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildActivityItem(
+            icon: Icons.storefront_rounded,
+            title: 'Food Store',
+            subtitle: 'Monday, 25 January',
+            amount: '-\$15.00',
+          ),
+          _buildActivityItem(
+            icon: Icons.home_rounded,
+            title: 'House Rent',
+            subtitle: 'Monday, 25 January',
+            amount: '-\$290.00',
+          ),
+          _buildActivityItem(
+            icon: Icons.shopping_cart_rounded,
+            title: 'Groceries',
+            subtitle: 'Sunday, 24 January',
+            amount: '-\$27.00',
+          ),
+          _buildActivityItem(
+            icon: Icons.storefront_rounded,
+            title: 'Food Store',
+            subtitle: 'Saturday, 23 January',
+            amount: '-\$15.00',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String amount,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.greyBorder.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.paleLime,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: AppColors.black, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.black,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: AppColors.greyText,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            amount,
+            style: const TextStyle(
+              color: AppColors.black,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickAction {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 }

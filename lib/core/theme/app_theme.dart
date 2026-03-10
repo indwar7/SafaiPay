@@ -5,19 +5,18 @@ import 'app_colors.dart';
 class AppTheme {
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
-    scaffoldBackgroundColor: AppColors.offWhite,
-    primaryColor: AppColors.primaryGreen,
+    scaffoldBackgroundColor: AppColors.scaffoldBg,
+    primaryColor: AppColors.primaryLime,
     colorScheme: ColorScheme.light(
       primary: AppColors.primaryGreen,
       secondary: AppColors.accentGreen,
       surface: AppColors.white,
-      background: AppColors.offWhite,
       error: AppColors.red,
     ),
-    textTheme: GoogleFonts.interTextTheme(),
+    textTheme: GoogleFonts.poppinsTextTheme(),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primaryGreen,
+        backgroundColor: AppColors.cardDark,
         foregroundColor: AppColors.white,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -43,10 +42,5 @@ class AppTheme {
       ),
       contentPadding: const EdgeInsets.all(16),
     ),
-    //cardTheme: const CardTheme(
-    //  color: AppColors.white,
-    //  elevation: 4,
-    //  margin: EdgeInsets.all(8),
   );
-  //);
 }

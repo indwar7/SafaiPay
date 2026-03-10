@@ -7,6 +7,7 @@ import '../features/main/main_app.dart';
 import '../features/booking/book_pickup_screen.dart';
 import '../features/report/report_issue_screen.dart';
 import '../features/rewards/rewards_screen.dart';
+import '../features/statistics/statistics_screen.dart';
 
 class AppRoutes {
   static const splash = '/';
@@ -17,6 +18,7 @@ class AppRoutes {
   static const bookPickup = '/book-pickup';
   static const reportIssue = '/report-issue';
   static const rewards = '/rewards';
+  static const statistics = '/statistics';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -42,6 +44,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const ReportIssueScreen());
       case rewards:
         return MaterialPageRoute(builder: (_) => const RewardsScreen());
+      case statistics:
+        return MaterialPageRoute(builder: (_) => const StatisticsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
@@ -61,5 +65,6 @@ class AppRoutes {
     bookPickup: (_) => const BookPickupScreen(),
     reportIssue: (_) => const ReportIssueScreen(),
     rewards: (_) => const RewardsScreen(),
+    statistics: (_) => const StatisticsScreen(),
   };
 }
