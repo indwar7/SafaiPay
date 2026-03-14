@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/theme/app_gradients.dart';
 import '../features/splash/splash_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/auth/login_screen.dart';
@@ -23,43 +24,89 @@ class AppRoutes {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case splash:
-        return MaterialPageRoute(builder: (_) => const SplashScreen());
+        return _buildRoute(const SplashScreen(), settings);
       case onboarding:
-        return MaterialPageRoute(builder: (_) => const OnboardingScreenPremium());
+        return _buildRoute(const OnboardingScreen(), settings);
       case login:
-        return MaterialPageRoute(builder: (_) => const LoginScreen());
+        return _buildRoute(const LoginScreen(), settings);
       case otpVerification:
         final args = settings.arguments as Map<String, dynamic>;
-        return MaterialPageRoute(
-          builder: (_) => OTPVerificationScreen(
+        return _buildRoute(
+          OTPVerificationScreen(
             verificationId: args['verificationId'],
             phoneNumber: args['phoneNumber'],
           ),
+          settings,
         );
       case mainApp:
-        return MaterialPageRoute(builder: (_) => const MainApp());
+        return _buildRoute(const MainApp(), settings);
       case bookPickup:
-        return MaterialPageRoute(builder: (_) => const BookPickupScreen());
+        return _buildRoute(const BookPickupScreen(), settings);
       case reportIssue:
-        return MaterialPageRoute(builder: (_) => const ReportIssueScreen());
+        return _buildRoute(const ReportIssueScreen(), settings);
       case rewards:
-        return MaterialPageRoute(builder: (_) => const RewardsScreen());
+        return _buildRoute(const RewardsScreen(), settings);
       case statistics:
-        return MaterialPageRoute(builder: (_) => const StatisticsScreen());
+        return _buildRoute(const StatisticsScreen(), settings);
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
+            backgroundColor: const Color(0xFF0A0A0A),
             body: Center(
-              child: Text('No route defined for ${settings.name}'),
+              child: Text(
+                'No route defined for ${settings.name}',
+                style: const TextStyle(color: Color(0xFFF5F5F5)),
+              ),
             ),
           ),
         );
     }
   }
 
+  // Custom page transition: slide from right, 280ms, easeOutCubic
+  static PageRouteBuilder _buildRoute(Widget page, RouteSettings settings) {
+    return PageRouteBuilder(
+      settings: settings,
+      transitionDuration: const Duration(milliseconds: 280),
+      reverseTransitionDuration: const Duration(milliseconds: 280),
+      pageBuilder: (context, animation, secondaryAnimation) => Container(
+        decoration: const BoxDecoration(gradient: AppGradients.screenBg),
+        child: page,
+      ),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final slideIn = Tween<Offset>(
+          begin: const Offset(1.0, 0.0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        ));
+
+        final scaleOut = Tween<double>(begin: 1.0, end: 0.96).animate(
+          CurvedAnimation(parent: secondaryAnimation, curve: Curves.easeOutCubic),
+        );
+
+        final fadeOut = Tween<double>(begin: 1.0, end: 0.6).animate(
+          CurvedAnimation(parent: secondaryAnimation, curve: Curves.easeOutCubic),
+        );
+
+        return SlideTransition(
+          position: slideIn,
+          child: ScaleTransition(
+            scale: scaleOut,
+            child: FadeTransition(
+              opacity: fadeOut,
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   static Map<String, WidgetBuilder> routes = {
     splash: (_) => const SplashScreen(),
-    onboarding: (_) => const OnboardingScreenPremium(),
+    onboarding: (_) => const OnboardingScreen(),
     login: (_) => const LoginScreen(),
     mainApp: (_) => const MainApp(),
     bookPickup: (_) => const BookPickupScreen(),

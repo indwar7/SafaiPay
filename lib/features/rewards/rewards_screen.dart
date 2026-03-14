@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/user_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../models/user_model.dart';
@@ -13,22 +14,24 @@ class RewardsScreen extends StatefulWidget {
   State<RewardsScreen> createState() => _RewardsScreenState();
 }
 
-class _RewardsScreenState extends State<RewardsScreen> {
+class _RewardsScreenState extends State<RewardsScreen>
+    with SingleTickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
   List<UserModel> _leaderboard = [];
   bool _isLoading = false;
   late ConfettiController _confettiController;
+  late TabController _tabController;
 
   final List<Badge> _badges = [
     Badge('Eco Warrior', 'Complete 10 reports', Icons.eco, 10,
-        AppColors.primaryGreen),
+        AppColors.neonLime),
     Badge('Clean Streak', '7 day check-in streak', Icons.local_fire_department,
-        7, AppColors.red),
+        7, AppColors.error),
     Badge('Point Master', 'Earn 100 points', Icons.star, 100, AppColors.gold),
     Badge('Booking Pro', 'Book 5 pickups', Icons.calendar_today, 5,
-        AppColors.blue),
+        AppColors.info),
     Badge('Community Hero', 'Top 10 in ward', Icons.emoji_events, 1,
-        AppColors.orange),
+        AppColors.warning),
   ];
 
   @override
@@ -36,6 +39,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
     super.initState();
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 3));
+    _tabController = TabController(length: 3, vsync: this);
     _loadLeaderboard();
   }
 
@@ -66,249 +70,418 @@ class _RewardsScreenState extends State<RewardsScreen> {
     }
   }
 
+  double _getBadgeProgress(Badge badge, UserModel? user) {
+    if (user == null) return 0.0;
+    switch (badge.title) {
+      case 'Eco Warrior':
+        return (user.totalReports / 10).clamp(0.0, 1.0);
+      case 'Clean Streak':
+        return (user.streak / 7).clamp(0.0, 1.0);
+      case 'Point Master':
+        return (user.points / 100).clamp(0.0, 1.0);
+      case 'Booking Pro':
+        return (user.totalBookings / 5).clamp(0.0, 1.0);
+      default:
+        return 0.0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
-        child: DefaultTabController(
-          length: 2,
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Rewards & Leaderboard',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Earn badges and compete with your community',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.greyText,
-                      ),
-                    ),
-                  ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 4),
+              child: Text(
+                'REWARDS',
+                style: GoogleFonts.bebasNeue(
+                  fontSize: 36,
+                  color: AppColors.textWhite,
+                  letterSpacing: 2,
                 ),
               ),
-              // Tabs
-              const TabBar(
-                labelColor: AppColors.primaryGreen,
-                unselectedLabelColor: AppColors.greyText,
-                indicatorColor: AppColors.primaryGreen,
-                tabs: [
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Text(
+                'Earn badges and compete with your community',
+                style: GoogleFonts.dmSans(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+
+            // Tabs
+            Container(
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom:
+                      BorderSide(color: AppColors.borderDefault, width: 1),
+                ),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                labelColor: AppColors.neonLime,
+                unselectedLabelColor: AppColors.textTertiary,
+                indicatorColor: AppColors.neonLime,
+                indicatorWeight: 2,
+                labelStyle: GoogleFonts.barlowSemiCondensed(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: GoogleFonts.barlowSemiCondensed(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+                tabs: const [
                   Tab(text: 'Badges'),
                   Tab(text: 'Leaderboard'),
+                  Tab(text: 'Challenges'),
                 ],
               ),
-              // Content
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _buildBadgesTab(),
-                    _buildLeaderboardTab(),
-                  ],
-                ),
+            ),
+
+            // Content
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildBadgesTab(),
+                  _buildLeaderboardTab(),
+                  _buildChallengesTab(),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  // ── BADGES TAB ──
   Widget _buildBadgesTab() {
     return Consumer<UserProvider>(builder: (context, userProvider, child) {
       final user = userProvider.currentUser;
       return GridView.builder(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.8,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.78,
         ),
         itemCount: _badges.length,
         itemBuilder: (context, index) {
           final badge = _badges[index];
           final isUnlocked = _isBadgeUnlocked(badge, user);
-          return _buildBadgeCard(badge, isUnlocked);
+          final progress = _getBadgeProgress(badge, user);
+          return _buildBadgeCard(badge, isUnlocked, progress);
         },
       );
     });
   }
 
-  Widget _buildBadgeCard(Badge badge, bool isUnlocked) {
+  Widget _buildBadgeCard(Badge badge, bool isUnlocked, double progress) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: isUnlocked ? AppColors.cardBg : AppColors.surface1,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isUnlocked ? AppColors.borderActive : AppColors.borderDefault,
+          width: 0.5,
+        ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Icon
           Container(
-            width: 70,
-            height: 70,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
               color: isUnlocked
-                  ? badge.color.withOpacity(0.1)
-                  : AppColors.greyLight.withOpacity(0.3),
+                  ? badge.color.withValues(alpha: 0.15)
+                  : AppColors.surface3,
               shape: BoxShape.circle,
             ),
             child: Icon(
               badge.icon,
-              size: 35,
-              color: isUnlocked ? badge.color : AppColors.greyText,
+              size: 32,
+              color: isUnlocked
+                  ? badge.color
+                  : AppColors.textTertiary,
             ),
           ),
           const SizedBox(height: 12),
+          // Title
           Text(
             badge.title,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isUnlocked ? AppColors.black : AppColors.greyText,
+            style: GoogleFonts.barlowSemiCondensed(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: isUnlocked ? AppColors.textWhite : AppColors.textTertiary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             badge.description,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.greyText,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              color: AppColors.textTertiary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+          // Earned chip or progress bar
           if (isUnlocked)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: badge.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.neonLime.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                'UNLOCKED',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: badge.color,
+                'EARNED',
+                style: GoogleFonts.barlowSemiCondensed(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.neonLime,
+                  letterSpacing: 1,
                 ),
               ),
             )
           else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.greyLight.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                'LOCKED',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.greyText,
+            Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 4,
+                    backgroundColor: AppColors.surface3,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.limeDim),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  '${(progress * 100).toInt()}%',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 10,
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+              ],
             ),
         ],
       ),
     );
   }
 
+  // ── LEADERBOARD TAB ──
   Widget _buildLeaderboardTab() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.neonLime),
+      );
     }
 
     if (_leaderboard.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'No data available',
-          style: TextStyle(color: AppColors.greyText),
+          'NO DATA AVAILABLE',
+          style: GoogleFonts.bebasNeue(
+            fontSize: 20,
+            color: AppColors.textTertiary,
+            letterSpacing: 1.5,
+          ),
         ),
       );
     }
 
     return Consumer<UserProvider>(builder: (context, userProvider, child) {
       final currentUser = userProvider.currentUser;
-      return ListView.builder(
-        padding: const EdgeInsets.all(24),
-        itemCount: _leaderboard.length,
-        itemBuilder: (context, index) {
-          final user = _leaderboard[index];
-          final isCurrentUser = user.uid == currentUser?.uid;
-          final rank = index + 1;
-          return _buildLeaderboardItem(user, rank, isCurrentUser);
-        },
+      return CustomScrollView(
+        slivers: [
+          // Top 3 podium
+          if (_leaderboard.length >= 3)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                child: _buildPodium(currentUser),
+              ),
+            ),
+
+          // Rest of leaderboard
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final actualIndex = _leaderboard.length >= 3 ? index + 3 : index;
+                  if (actualIndex >= _leaderboard.length) return null;
+                  final user = _leaderboard[actualIndex];
+                  final isCurrentUser = user.uid == currentUser?.uid;
+                  final rank = actualIndex + 1;
+                  return _buildLeaderboardItem(user, rank, isCurrentUser);
+                },
+                childCount: _leaderboard.length >= 3
+                    ? _leaderboard.length - 3
+                    : _leaderboard.length,
+              ),
+            ),
+          ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+        ],
       );
     });
   }
 
-  Widget _buildLeaderboardItem(UserModel user, int rank, bool isCurrentUser) {
-    Color getRankColor() {
-      if (rank == 1) return AppColors.gold;
-      if (rank == 2) return Colors.grey.shade400;
-      if (rank == 3) return Colors.brown.shade300;
-      return AppColors.greyText;
-    }
+  Widget _buildPodium(UserModel? currentUser) {
+    final first = _leaderboard[0];
+    final second = _leaderboard[1];
+    final third = _leaderboard[2];
 
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // #2
+        Expanded(
+          child: _buildPodiumCard(
+            user: second,
+            rank: 2,
+            height: 130,
+            isCurrentUser: second.uid == currentUser?.uid,
+            isFirst: false,
+          ),
+        ),
+        const SizedBox(width: 8),
+        // #1
+        Expanded(
+          flex: 1,
+          child: _buildPodiumCard(
+            user: first,
+            rank: 1,
+            height: 160,
+            isCurrentUser: first.uid == currentUser?.uid,
+            isFirst: true,
+          ),
+        ),
+        const SizedBox(width: 8),
+        // #3
+        Expanded(
+          child: _buildPodiumCard(
+            user: third,
+            rank: 3,
+            height: 120,
+            isCurrentUser: third.uid == currentUser?.uid,
+            isFirst: false,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPodiumCard({
+    required UserModel user,
+    required int rank,
+    required double height,
+    required bool isCurrentUser,
+    required bool isFirst,
+  }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      height: height,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isCurrentUser
-            ? AppColors.primaryGreen.withOpacity(0.1)
-            : Colors.white,
+        color: isFirst ? AppColors.neonLime.withValues(alpha: 0.12) : AppColors.surface3,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isFirst ? AppColors.neonLime.withValues(alpha: 0.3) : AppColors.borderDefault,
+          width: isFirst ? 1.5 : 0.5,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (isFirst)
+            Icon(Icons.workspace_premium, color: AppColors.neonLime, size: 24),
+          Text(
+            '#$rank',
+            style: GoogleFonts.bebasNeue(
+              fontSize: isFirst ? 28 : 22,
+              color: isFirst ? AppColors.neonLime : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            user.name ?? 'User',
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textWhite,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${user.points}',
+            style: GoogleFonts.bebasNeue(
+              fontSize: 20,
+              color: AppColors.neonLime,
+            ),
+          ),
+          Text(
+            'pts',
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeaderboardItem(UserModel user, int rank, bool isCurrentUser) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isCurrentUser ? AppColors.surface2 : AppColors.cardBg,
+        borderRadius: BorderRadius.circular(14),
         border: isCurrentUser
-            ? Border.all(color: AppColors.primaryGreen, width: 2)
-            : null,
+            ? const Border(
+                left: BorderSide(color: AppColors.neonLime, width: 2),
+              )
+            : Border.all(color: AppColors.borderDefault, width: 0.5),
       ),
       child: Row(
         children: [
           // Rank
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: getRankColor().withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: rank <= 3
-                  ? Icon(Icons.emoji_events, color: getRankColor(), size: 24)
-                  : Text(
-                      '#$rank',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: getRankColor(),
-                      ),
-                    ),
+          SizedBox(
+            width: 36,
+            child: Text(
+              '#$rank',
+              style: GoogleFonts.bebasNeue(
+                fontSize: 18,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           // User info
           Expanded(
             child: Column(
@@ -316,43 +489,45 @@ class _RewardsScreenState extends State<RewardsScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      user.name ?? 'User',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.black,
+                    Flexible(
+                      child: Text(
+                        user.name ?? 'User',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textWhite,
+                        ),
                       ),
                     ),
                     if (isCurrentUser) ...[
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryGreen,
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppColors.neonLime,
+                          borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text(
+                        child: Text(
                           'YOU',
-                          style: TextStyle(
+                          style: GoogleFonts.barlowSemiCondensed(
                             fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textOnLime,
                           ),
                         ),
                       ),
                     ],
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
-                  '${user.totalReports} reports • ${user.totalBookings} bookings',
-                  style: const TextStyle(
+                  '${user.totalReports} reports \u2022 ${user.totalBookings} bookings',
+                  style: GoogleFonts.dmSans(
                     fontSize: 12,
-                    color: AppColors.greyText,
+                    color: AppColors.textTertiary,
                   ),
                 ),
               ],
@@ -364,17 +539,16 @@ class _RewardsScreenState extends State<RewardsScreen> {
             children: [
               Text(
                 '${user.points}',
-                style: const TextStyle(
+                style: GoogleFonts.bebasNeue(
                   fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryGreen,
+                  color: AppColors.neonLime,
                 ),
               ),
-              const Text(
+              Text(
                 'points',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.greyText,
+                style: GoogleFonts.dmSans(
+                  fontSize: 11,
+                  color: AppColors.textTertiary,
                 ),
               ),
             ],
@@ -384,9 +558,43 @@ class _RewardsScreenState extends State<RewardsScreen> {
     );
   }
 
+  // ── CHALLENGES TAB ──
+  Widget _buildChallengesTab() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.flag_outlined,
+            size: 64,
+            color: AppColors.neonLime.withValues(alpha: 0.4),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'COMING SOON',
+            style: GoogleFonts.bebasNeue(
+              fontSize: 24,
+              color: AppColors.textTertiary,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Weekly challenges will appear here',
+            style: GoogleFonts.dmSans(
+              fontSize: 14,
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _confettiController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 }

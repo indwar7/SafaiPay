@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import '../../core/theme/app_colors.dart';
 
@@ -16,7 +17,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBg,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -36,7 +37,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  // ── Header ──────────────────────────────────────────────────────
+  // -- Header --
 
   Widget _buildHeader() {
     return Padding(
@@ -49,38 +50,39 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: AppColors.cardBg,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.greyBorder),
+                border: Border.all(color: AppColors.borderDefault),
               ),
               child: const Icon(Icons.arrow_back_ios_new,
-                  size: 18, color: AppColors.black),
+                  size: 18, color: AppColors.textWhite),
             ),
           ),
-          const Text(
+          Text(
             'Statistics',
-            style: TextStyle(
-              color: AppColors.black,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
+            style: GoogleFonts.bebasNeue(
+              color: AppColors.textWhite,
+              fontSize: 32,
+              fontWeight: FontWeight.w400,
+              letterSpacing: 1.5,
             ),
           ),
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.cardBg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.greyBorder),
+              border: Border.all(color: AppColors.borderDefault),
             ),
             child: const Icon(Icons.more_horiz,
-                size: 18, color: AppColors.black),
+                size: 18, color: AppColors.textWhite),
           ),
         ],
       ),
     );
   }
 
-  // ── Period Selector ─────────────────────────────────────────────
+  // -- Period Selector --
 
   Widget _buildPeriodSelector() {
     return Padding(
@@ -88,9 +90,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: AppColors.greyBorder),
         ),
         child: Row(
           children: List.generate(_periods.length, (index) {
@@ -102,14 +103,17 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: isActive ? AppColors.primaryLime : Colors.transparent,
+                    color:
+                        isActive ? AppColors.neonLime : Colors.transparent,
                     borderRadius: BorderRadius.circular(26),
                   ),
                   child: Center(
                     child: Text(
                       _periods[index],
-                      style: TextStyle(
-                        color: isActive ? AppColors.black : AppColors.greyText,
+                      style: GoogleFonts.dmSans(
+                        color: isActive
+                            ? AppColors.textOnLime
+                            : AppColors.textSecondary,
                         fontSize: 13,
                         fontWeight:
                             isActive ? FontWeight.w700 : FontWeight.w500,
@@ -125,7 +129,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  // ── Earning & Spending Cards ────────────────────────────────────
+  // -- Earning & Spending Cards --
 
   Widget _buildEarningSpendingCards() {
     return Padding(
@@ -137,22 +141,22 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             child: Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: AppColors.cardBg,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.greyBorder),
+                border: Border.all(color: AppColors.borderDefault),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.trending_up_rounded,
-                          color: AppColors.primaryGreen, size: 18),
+                      const Icon(Icons.trending_up_rounded,
+                          color: AppColors.neonLime, size: 18),
                       const SizedBox(width: 6),
-                      const Text(
+                      Text(
                         'Earning',
-                        style: TextStyle(
-                          color: AppColors.greyText,
+                        style: GoogleFonts.dmSans(
+                          color: AppColors.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -161,29 +165,28 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryLime.withValues(alpha: 0.3),
+                          color: AppColors.neonLime.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.more_horiz,
-                            size: 14, color: AppColors.primaryGreen),
+                            size: 14, color: AppColors.neonLime),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     '24%',
-                    style: TextStyle(
-                      color: AppColors.black,
+                    style: GoogleFonts.bebasNeue(
+                      color: AppColors.neonLime,
                       fontSize: 38,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -1,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'Your current month earning\nis increased by 24% compared\nto last month.',
-                    style: TextStyle(
-                      color: AppColors.greyText.withValues(alpha: 0.8),
+                    style: GoogleFonts.dmSans(
+                      color: AppColors.textSecondary,
                       fontSize: 10,
                       height: 1.4,
                     ),
@@ -198,7 +201,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             child: Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppColors.cardDark,
+                color: AppColors.cardBg,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
@@ -207,12 +210,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   Row(
                     children: [
                       const Icon(Icons.trending_down_rounded,
-                          color: AppColors.primaryLime, size: 18),
+                          color: AppColors.neonLime, size: 18),
                       const SizedBox(width: 6),
-                      const Text(
+                      Text(
                         'Spending',
-                        style: TextStyle(
-                          color: Colors.white70,
+                        style: GoogleFonts.dmSans(
+                          color: AppColors.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -221,11 +224,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: AppColors.surface3,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.more_horiz,
-                            size: 14, color: Colors.white60),
+                            size: 14, color: AppColors.textTertiary),
                       ),
                     ],
                   ),
@@ -233,30 +236,28 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text(
+                      Text(
                         '\$3,250',
-                        style: TextStyle(
-                          color: Colors.white,
+                        style: GoogleFonts.bebasNeue(
+                          color: AppColors.textWhite,
                           fontSize: 28,
-                          fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 3),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
                         child: Text(
                           '.80',
-                          style: TextStyle(
-                            color: Colors.white54,
+                          style: GoogleFonts.bebasNeue(
+                            color: AppColors.textTertiary,
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // Mini pie chart placeholder
+                  // Mini pie chart
                   Center(
                     child: SizedBox(
                       width: 80,
@@ -271,9 +272,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _legendDot(AppColors.primaryLime, 'Debit Card'),
+                      _legendDot(AppColors.neonLime, 'Debit Card'),
                       const SizedBox(width: 12),
-                      _legendDot(Colors.white38, 'Credit Card'),
+                      _legendDot(AppColors.borderDefault, 'Credit Card'),
                     ],
                   ),
                 ],
@@ -299,8 +300,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white54,
+          style: GoogleFonts.dmSans(
+            color: AppColors.textTertiary,
             fontSize: 9,
             fontWeight: FontWeight.w500,
           ),
@@ -309,7 +310,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  // ── Goal Progress ───────────────────────────────────────────────
+  // -- Goal Progress --
 
   Widget _buildGoalProgress() {
     return Padding(
@@ -317,40 +318,38 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.greyBorder),
+          border: Border.all(color: AppColors.borderDefault),
         ),
         child: Column(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Goal',
-                  style: TextStyle(
-                    color: AppColors.black,
+                  style: GoogleFonts.barlowSemiCondensed(
+                    color: AppColors.textWhite,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 RichText(
-                  text: const TextSpan(
+                  text: TextSpan(
                     children: [
                       TextSpan(
                         text: '\$2567',
-                        style: TextStyle(
-                          color: AppColors.black,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                        style: GoogleFonts.bebasNeue(
+                          color: AppColors.textWhite,
+                          fontSize: 16,
                         ),
                       ),
                       TextSpan(
                         text: '/\$5000',
-                        style: TextStyle(
-                          color: AppColors.greyText,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                        style: GoogleFonts.bebasNeue(
+                          color: AppColors.textTertiary,
+                          fontSize: 16,
                         ),
                       ),
                     ],
@@ -359,7 +358,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               ],
             ),
             const SizedBox(height: 14),
-            // Progress dots
+            // Progress bar segments
             Row(
               children: List.generate(10, (index) {
                 return Expanded(
@@ -368,8 +367,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     height: 8,
                     decoration: BoxDecoration(
                       color: index < 5
-                          ? AppColors.primaryLime
-                          : AppColors.greyBorder,
+                          ? AppColors.neonLime
+                          : AppColors.borderDefault,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -382,7 +381,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  // ── Overview Section ────────────────────────────────────────────
+  // -- Overview Section --
 
   Widget _buildOverview() {
     return Padding(
@@ -392,10 +391,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Overview',
-                style: TextStyle(
-                  color: AppColors.black,
+                style: GoogleFonts.barlowSemiCondensed(
+                  color: AppColors.textWhite,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
@@ -403,12 +402,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: AppColors.cardBg,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.greyBorder),
+                  border: Border.all(color: AppColors.borderDefault),
                 ),
                 child: const Icon(Icons.tune,
-                    size: 18, color: AppColors.greyText),
+                    size: 18, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -417,9 +416,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.cardBg,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.greyBorder),
+              border: Border.all(color: AppColors.borderDefault),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -430,21 +429,20 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Total Balance',
-                          style: TextStyle(
-                            color: AppColors.greyText,
+                          style: GoogleFonts.dmSans(
+                            color: AppColors.textSecondary,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           '\$25,453.00',
-                          style: TextStyle(
-                            color: AppColors.black,
+                          style: GoogleFonts.bebasNeue(
+                            color: AppColors.textWhite,
                             fontSize: 26,
-                            fontWeight: FontWeight.w800,
                             letterSpacing: -0.5,
                           ),
                         ),
@@ -454,10 +452,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         _spendingLabel(
-                            'Debit Card Spending', AppColors.primaryLime),
+                            'Debit Card Spending', AppColors.neonLime),
                         const SizedBox(height: 6),
                         _spendingLabel(
-                            'Credit Card Spending', AppColors.greyLight),
+                            'Credit Card Spending', AppColors.borderDefault),
                       ],
                     ),
                   ],
@@ -467,16 +465,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryLime,
+                      color: AppColors.neonLime,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
+                    child: Text(
                       '\$2,410.00',
-                      style: TextStyle(
-                        color: AppColors.black,
+                      style: GoogleFonts.dmSans(
+                        color: AppColors.textOnLime,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
@@ -497,8 +495,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       children: [
         Text(
           text,
-          style: const TextStyle(
-            color: AppColors.greyText,
+          style: GoogleFonts.dmSans(
+            color: AppColors.textTertiary,
             fontSize: 10,
             fontWeight: FontWeight.w500,
           ),
@@ -516,22 +514,25 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  // ── Bar Chart ───────────────────────────────────────────────────
+  // -- Bar Chart --
 
   Widget _buildBarChart() {
     final months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN'];
     final debitValues = [0.6, 0.8, 0.5, 0.9, 0.7, 0.4];
     final creditValues = [0.4, 0.3, 0.7, 0.5, 0.6, 0.3];
-    final maxY = ['\$3500', '\$3000', '\$2500', '\$2000', '\$1500', '\$1000', '\$500', '\$0'];
+    final maxY = [
+      '\$3500', '\$3000', '\$2500', '\$2000', '\$1500', '\$1000', '\$500',
+      '\$0'
+    ];
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.greyBorder),
+          border: Border.all(color: AppColors.borderDefault),
         ),
         child: Column(
           children: [
@@ -547,8 +548,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     children: maxY
                         .map((label) => Text(
                               label,
-                              style: const TextStyle(
-                                color: AppColors.greyText,
+                              style: GoogleFonts.dmSans(
+                                color: AppColors.textTertiary,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -571,18 +572,18 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                               width: 16,
                               height: 180 * debitValues[index],
                               decoration: BoxDecoration(
-                                color: AppColors.primaryLime,
+                                color: AppColors.neonLime,
                                 borderRadius: const BorderRadius.vertical(
                                     top: Radius.circular(4)),
                               ),
                             ),
                             const SizedBox(height: 3),
-                            // Credit bar (dark)
+                            // Credit bar (dark secondary)
                             Container(
                               width: 16,
                               height: 180 * creditValues[index] * 0.5,
                               decoration: BoxDecoration(
-                                color: AppColors.cardDark,
+                                color: AppColors.borderDefault,
                                 borderRadius: const BorderRadius.vertical(
                                     top: Radius.circular(4)),
                               ),
@@ -604,8 +605,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 children: months
                     .map((m) => Text(
                           m,
-                          style: const TextStyle(
-                            color: AppColors.greyText,
+                          style: GoogleFonts.dmSans(
+                            color: AppColors.textTertiary,
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),
@@ -620,7 +621,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 }
 
-// ── Mini Pie Chart Painter ────────────────────────────────────────
+// -- Mini Pie Chart Painter --
 
 class _MiniPieChartPainter extends CustomPainter {
   @override
@@ -628,16 +629,16 @@ class _MiniPieChartPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 - 4;
 
-    // Debit portion (lime)
+    // Debit portion (neon lime)
     final debitPaint = Paint()
-      ..color = AppColors.primaryLime
+      ..color = AppColors.neonLime
       ..style = PaintingStyle.stroke
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round;
 
-    // Credit portion (grey)
+    // Credit portion (dark border)
     final creditPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.2)
+      ..color = AppColors.borderDefault
       ..style = PaintingStyle.stroke
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round;
@@ -648,7 +649,8 @@ class _MiniPieChartPainter extends CustomPainter {
     canvas.drawArc(rect, 0, 2 * math.pi, false, creditPaint);
 
     // Debit arc (65%)
-    canvas.drawArc(rect, -math.pi / 2, 2 * math.pi * 0.65, false, debitPaint);
+    canvas.drawArc(
+        rect, -math.pi / 2, 2 * math.pi * 0.65, false, debitPaint);
   }
 
   @override

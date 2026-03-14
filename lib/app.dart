@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'routes/app_routes.dart';
@@ -11,6 +12,16 @@ class GarbageApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Color(0xFF0A0A0A),
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
@@ -20,8 +31,8 @@ class GarbageApp extends StatelessWidget {
       child: MaterialApp(
         title: 'SafaiPay',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        initialRoute: AppRoutes.mainApp,  // CHANGED THIS LINE DIRECTLY TO HOME SCREEN
+        theme: AppTheme.darkTheme,
+        initialRoute: AppRoutes.mainApp,
         onGenerateRoute: AppRoutes.onGenerateRoute,
       ),
     );

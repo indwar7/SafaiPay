@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+// ignore: unused_import
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'dart:io';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/report_provider.dart';
 import '../../models/report_model.dart';
 import '../../services/location_service.dart';
 import '../../services/storage_service.dart';
 import '../../core/theme/app_colors.dart';
+// ignore: unused_import
 import '../../core/widgets/primary_button.dart';
+// ignore: unused_import
 import '../../core/constants/app_constants.dart';
 import 'package:uuid/uuid.dart';
 
@@ -27,7 +31,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
   final StorageService _storageService = StorageService();
   final ImagePicker _picker = ImagePicker();
   late AnimationController _pulseController;
-  
+
   File? _selectedImage;
   String? _selectedIssueType;
   String _address = 'Fetching location...';
@@ -35,6 +39,15 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
   double? _longitude;
   bool _isLoading = false;
   bool _isFetchingLocation = true;
+
+  static const _issueCategories = [
+    'Overflowing Bin',
+    'Open Garbage',
+    'Sewage',
+    'Road Waste',
+    'Littering',
+    'Illegal Dumping',
+  ];
 
   @override
   void initState() {
@@ -55,19 +68,19 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
 
   Future<void> _autoFetchLocation() async {
     setState(() => _isFetchingLocation = true);
-    
+
     final position = await _locationService.getCurrentLocation();
     if (position != null) {
       setState(() {
         _latitude = position.latitude;
         _longitude = position.longitude;
       });
-      
+
       final address = await _locationService.getAddressFromCoordinates(
         position.latitude,
         position.longitude,
       );
-      
+
       setState(() {
         _address = address;
         _isFetchingLocation = false;
@@ -77,12 +90,12 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
         _address = 'Location permission denied. Please enable location.';
         _isFetchingLocation = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Please enable location services'),
-            backgroundColor: AppColors.orange,
+            backgroundColor: AppColors.error,
             action: SnackBarAction(
               label: 'Enable',
               textColor: Colors.white,
@@ -116,7 +129,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Failed to pick image. Please try again.'),
-            backgroundColor: AppColors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -126,6 +139,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
   void _showImageSourceDialog() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: AppColors.cardBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -138,16 +152,17 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.greyLight,
+                color: AppColors.borderDefault,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Choose Image Source',
-              style: TextStyle(
+              style: GoogleFonts.dmSans(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: AppColors.textWhite,
               ),
             ),
             const SizedBox(height: 20),
@@ -155,16 +170,18 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withOpacity(0.1),
+                  color: AppColors.neonLime.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.camera_alt,
-                  color: AppColors.primaryGreen,
+                  color: AppColors.neonLime,
                 ),
               ),
-              title: const Text('Take Photo'),
-              subtitle: const Text('Capture using camera'),
+              title: Text('Take Photo',
+                  style: GoogleFonts.dmSans(color: AppColors.textWhite)),
+              subtitle: Text('Capture using camera',
+                  style: GoogleFonts.dmSans(color: AppColors.textSecondary)),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
@@ -174,16 +191,18 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.blue.withOpacity(0.1),
+                  color: AppColors.neonLime.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.photo_library,
-                  color: AppColors.blue,
+                  color: AppColors.neonLime,
                 ),
               ),
-              title: const Text('Choose from Gallery'),
-              subtitle: const Text('Select existing photo'),
+              title: Text('Choose from Gallery',
+                  style: GoogleFonts.dmSans(color: AppColors.textWhite)),
+              subtitle: Text('Select existing photo',
+                  style: GoogleFonts.dmSans(color: AppColors.textSecondary)),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -203,7 +222,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill all required fields'),
-          backgroundColor: AppColors.red,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -261,20 +280,20 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
                   ),
                   child: const Icon(
                     Icons.check,
-                    color: Colors.white,
+                    color: AppColors.textOnLime,
                     size: 20,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Report submitted successfully! +5 points',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
             ),
-            backgroundColor: AppColors.primaryGreen,
+            backgroundColor: AppColors.neonLime,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -288,7 +307,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to submit report: $e'),
-          backgroundColor: AppColors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     } finally {
@@ -299,382 +318,392 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.arrow_back, color: AppColors.black, size: 20),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Report Issue',
-          style: TextStyle(color: AppColors.black),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline, color: AppColors.black),
-            onPressed: () {
-              // Show help dialog
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            TweenAnimationBuilder<double>(
-              duration: const Duration(milliseconds: 600),
-              tween: Tween(begin: 0.0, end: 1.0),
-              builder: (context, value, child) {
-                return Opacity(
-                  opacity: value,
-                  child: Transform.translate(
-                    offset: Offset(0, 20 * (1 - value)),
-                    child: child,
-                  ),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Report a cleanliness issue',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.star,
-                              size: 16,
-                              color: AppColors.primaryGreen,
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              '+5 Points',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryGreen,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Camera section with animation
-            TweenAnimationBuilder<double>(
-              duration: const Duration(milliseconds: 800),
-              tween: Tween(begin: 0.0, end: 1.0),
-              builder: (context, value, child) {
-                return Transform.scale(
-                  scale: value,
-                  child: child,
-                );
-              },
-              child: GestureDetector(
-                onTap: _showImageSourceDialog,
-                child: Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.primaryGreen.withOpacity(0.3),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryGreen.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: _selectedImage != null
-                      ? Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(18),
-                              child: Image.file(
-                                _selectedImage!,
-                                fit: BoxFit.cover,
-                                width: double.infinity,
-                                height: double.infinity,
-                              ),
-                            ),
-                            Positioned(
-                              top: 10,
-                              right: 10,
-                              child: GestureDetector(
-                                onTap: () => setState(() => _selectedImage = null),
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ScaleTransition(
-                              scale: Tween<double>(begin: 0.95, end: 1.05).animate(
-                                CurvedAnimation(
-                                  parent: _pulseController,
-                                  curve: Curves.easeInOut,
-                                ),
-                              ),
-                              child: Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryGreen.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt,
-                                  size: 50,
-                                  color: AppColors.primaryGreen,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Tap to add photo',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Camera or Gallery',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.greyText,
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Location chip with pulse animation
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _isFetchingLocation
-                    ? AppColors.orange.withOpacity(0.1)
-                    : AppColors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _isFetchingLocation
-                      ? AppColors.orange.withOpacity(0.3)
-                      : AppColors.blue.withOpacity(0.3),
-                ),
-              ),
+            // Custom back header
+            Container(
+              color: Colors.transparent,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Row(
                 children: [
-                  _isFetchingLocation
-                      ? SpinKitPulse(
-                          color: AppColors.orange,
-                          size: 24,
-                        )
-                      : const Icon(Icons.location_on, color: AppColors.blue),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _address,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.black,
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface3,
+                        borderRadius: BorderRadius.circular(14),
                       ),
+                      child: const Icon(Icons.arrow_back,
+                          color: AppColors.textWhite, size: 20),
                     ),
                   ),
-                  if (!_isFetchingLocation)
-                    IconButton(
-                      icon: const Icon(Icons.refresh, size: 20),
-                      onPressed: _autoFetchLocation,
-                      color: AppColors.blue,
+                  const SizedBox(width: 16),
+                  Text(
+                    'Report Issue',
+                    style: GoogleFonts.bebasNeue(
+                      fontSize: 32,
+                      color: AppColors.textWhite,
                     ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
 
-            // Issue Type
-            const Text(
-              'Issue Type *',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: AppConstants.issueTypes.map((type) {
-                final isSelected = _selectedIssueType == type;
-                return TweenAnimationBuilder<double>(
-                  duration: const Duration(milliseconds: 300),
-                  tween: Tween(begin: 0.95, end: isSelected ? 1.0 : 0.95),
-                  builder: (context, scale, child) {
-                    return Transform.scale(
-                      scale: scale,
-                      child: child,
-                    );
-                  },
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedIssueType = type;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primaryGreen
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primaryGreen
-                              : AppColors.greyLight,
-                          width: 2,
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+
+                    // CAMERA ZONE
+                    GestureDetector(
+                      onTap: _showImageSourceDialog,
+                      child: Container(
+                        width: double.infinity,
+                        height: 220,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.neonLime.withValues(alpha: 0.5),
+                            width: 1.5,
+                          ),
                         ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.primaryGreen.withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ]
-                            : null,
+                        child: _selectedImage != null
+                            ? Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(18),
+                                    child: Image.file(
+                                      _selectedImage!,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 12,
+                                    right: 12,
+                                    child: GestureDetector(
+                                      onTap: _showImageSourceDialog,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.neonLime,
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          'Change Photo',
+                                          style: GoogleFonts.dmSans(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textOnLime,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  ScaleTransition(
+                                    scale: Tween<double>(
+                                            begin: 0.95, end: 1.05)
+                                        .animate(CurvedAnimation(
+                                      parent: _pulseController,
+                                      curve: Curves.easeInOut,
+                                    )),
+                                    child: const Icon(
+                                      Icons.camera_alt_outlined,
+                                      size: 32,
+                                      color: AppColors.neonLime,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Tap to capture',
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // LOCATION CARD
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBg,
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (isSelected)
-                            const Icon(
-                              Icons.check_circle,
-                              size: 16,
-                              color: Colors.white,
+                          const Icon(Icons.location_on,
+                              color: AppColors.neonLime, size: 22),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _isFetchingLocation
+                                ? _buildShimmerText()
+                                : Text(
+                                    _address,
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 14,
+                                      color: AppColors.textWhite,
+                                    ),
+                                  ),
+                          ),
+                          if (!_isFetchingLocation)
+                            GestureDetector(
+                              onTap: _autoFetchLocation,
+                              child: const Icon(Icons.refresh,
+                                  size: 20, color: AppColors.textSecondary),
                             ),
-                          if (isSelected) const SizedBox(width: 4),
-                          Text(
-                            type,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : AppColors.black,
-                              fontWeight: FontWeight.w600,
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+
+                    // ISSUE CATEGORIES
+                    Text(
+                      "What's the issue?",
+                      style: GoogleFonts.barlow(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textWhite,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 44,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _issueCategories.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (context, index) {
+                          final type = _issueCategories[index];
+                          final isSelected = _selectedIssueType == type;
+                          return GestureDetector(
+                            onTap: () =>
+                                setState(() => _selectedIssueType = type),
+                            child: AnimatedScale(
+                              scale: isSelected ? 1.05 : 1.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 18, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.neonLime
+                                      : AppColors.surface3,
+                                  borderRadius: BorderRadius.circular(22),
+                                  border: isSelected
+                                      ? null
+                                      : Border.all(
+                                          color: AppColors.borderActive),
+                                ),
+                                child: Text(
+                                  type,
+                                  style: GoogleFonts.dmSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isSelected
+                                        ? AppColors.textOnLime
+                                        : AppColors.textWhite,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+
+                    // DESCRIPTION
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBg,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Stack(
+                        children: [
+                          TextField(
+                            controller: _descriptionController,
+                            maxLines: 4,
+                            minLines: 3,
+                            maxLength: 300,
+                            style: GoogleFonts.dmSans(
+                              fontSize: 14,
+                              color: AppColors.textWhite,
+                            ),
+                            onChanged: (_) => setState(() {}),
+                            decoration: InputDecoration(
+                              hintText: 'Describe the issue in detail...',
+                              hintStyle: GoogleFonts.dmSans(
+                                fontSize: 14,
+                                color: AppColors.textTertiary,
+                              ),
+                              filled: true,
+                              fillColor: Colors.transparent,
+                              contentPadding: const EdgeInsets.all(16),
+                              counterText: '',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: const BorderSide(
+                                  color: AppColors.neonLime,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 10,
+                            right: 14,
+                            child: Text(
+                              '${_descriptionController.text.length}/300',
+                              style: GoogleFonts.dmSans(
+                                fontSize: 11,
+                                color: AppColors.textTertiary,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 24),
+                    const SizedBox(height: 28),
 
-            // Description
-            const Text(
-              'Description *',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _descriptionController,
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: 'Describe the issue in detail...',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(
-                    color: AppColors.greyLight,
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: const BorderSide(
-                    color: AppColors.primaryGreen,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
+                    // POINTS BANNER
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 18),
+                      decoration: BoxDecoration(
+                        color: AppColors.limePointsBanner,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.neonLime.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.star_rounded,
+                              color: AppColors.neonLime, size: 28),
+                          const SizedBox(width: 12),
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: "You'll earn  ",
+                                  style: GoogleFonts.dmSans(
+                                    fontSize: 14,
+                                    color: AppColors.textWhite,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '+5 POINTS',
+                                  style: GoogleFonts.bebasNeue(
+                                    fontSize: 28,
+                                    color: AppColors.neonLime,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 28),
 
-            PrimaryButton(
-              text: 'Submit Report (+5 points)',
-              onPressed: _submitReport,
-              isLoading: _isLoading,
-              icon: Icons.send,
+                    // SUBMIT BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _submitReport,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.neonLime,
+                          disabledBackgroundColor:
+                              AppColors.neonLime.withValues(alpha: 0.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: AppColors.textOnLime,
+                                ),
+                              )
+                            : Text(
+                                'SUBMIT REPORT',
+                                style: GoogleFonts.bebasNeue(
+                                  fontSize: 20,
+                                  color: AppColors.textOnLime,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerText() {
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 1200),
+      tween: Tween(begin: 0.3, end: 1.0),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: child,
+        );
+      },
+      onEnd: () {
+        if (_isFetchingLocation) {
+          setState(() {});
+        }
+      },
+      child: Container(
+        height: 14,
+        width: 200,
+        decoration: BoxDecoration(
+          color: AppColors.borderDefault,
+          borderRadius: BorderRadius.circular(4),
         ),
       ),
     );

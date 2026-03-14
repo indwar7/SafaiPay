@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/auth_service.dart';
 import '../../routes/app_routes.dart';
@@ -12,29 +12,71 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _phoneController = TextEditingController();
   final AuthService _authService = AuthService();
+  final FocusNode _phoneFocusNode = FocusNode();
   bool _isLoading = false;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+  bool _isPhoneFocused = false;
+
+  late AnimationController _entranceController;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
+
+  // Staggered entrance animations
+  late AnimationController _staggerController;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
+
+    _phoneFocusNode.addListener(() {
+      setState(() => _isPhoneFocused = _phoneFocusNode.hasFocus);
+    });
+
+    _entranceController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
     );
-    _slideAnimation = Tween<Offset>(
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOutCubic),
+    );
+
+    _staggerController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _entranceController.forward();
+    _staggerController.forward();
+  }
+
+  Animation<double> _staggerFade(double begin, double end) {
+    return Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _staggerController,
+        curve: Interval(begin, end, curve: Curves.easeOut),
+      ),
+    );
+  }
+
+  Animation<Offset> _staggerSlide(double begin, double end) {
+    return Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
-    _animationController.forward();
+    ).animate(
+      CurvedAnimation(
+        parent: _staggerController,
+        curve: Interval(begin, end, curve: Curves.easeOutCubic),
+      ),
+    );
   }
 
   void _sendOTP() async {
@@ -72,15 +114,31 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           children: [
             Icon(
               isError ? Icons.error_outline : Icons.check_circle_outline,
-              color: Colors.white,
+              color: isError ? AppColors.error : AppColors.neonLime,
+              size: 20,
             ),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.dmSans(
+                  color: AppColors.textWhite,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ],
         ),
-        backgroundColor: isError ? const Color(0xFFE53935) : const Color(0xFF00C853),
+        backgroundColor: AppColors.cardBg,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: isError
+                ? AppColors.error.withValues(alpha: 0.3)
+                : AppColors.neonLime.withValues(alpha: 0.3),
+          ),
+        ),
         margin: const EdgeInsets.all(16),
       ),
     );
@@ -89,291 +147,85 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF00C853),
-              const Color(0xFF00BFA5),
-              const Color(0xFF1DE9B6),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 60),
-                      // Animated Logo
-                      TweenAnimationBuilder(
-                        duration: const Duration(seconds: 2),
-                        tween: Tween<double>(begin: 0, end: 1),
-                        builder: (context, double value, child) {
-                          return Transform.scale(
-                            scale: value,
-                            child: Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(30),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 30,
-                                    offset: const Offset(0, 15),
-                                  ),
-                                  BoxShadow(
-                                    color: Colors.white.withValues(alpha: 0.3),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, -5),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Icons.eco_rounded,
-                                size: 60,
-                                color: const Color(0xFF00C853),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 40),
-                      // Title
-                      const Text(
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: SlideTransition(
+                position: _slideAnim,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 60),
+
+                    // Logo
+                    _buildStaggered(0.0, 0.3, child: _buildLogo()),
+                    const SizedBox(height: 24),
+
+                    // Title
+                    _buildStaggered(
+                      0.1,
+                      0.4,
+                      child: Text(
                         'SafaiPay',
-                        style: TextStyle(
+                        style: GoogleFonts.bebasNeue(
                           fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 1.5,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black26,
-                              offset: Offset(0, 4),
-                              blurRadius: 10,
-                            ),
-                          ],
+                          color: AppColors.textWhite,
+                          letterSpacing: 2,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Text(
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Tagline
+                    _buildStaggered(
+                      0.15,
+                      0.45,
+                      child: Text(
                         'Clean Actions. Real Rewards.',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white.withValues(alpha: 0.95),
-                          fontWeight: FontWeight.w500,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 16,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w400,
                           letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 60),
-                      // Glass Card
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(30),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Container(
-                            padding: const EdgeInsets.all(32),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.25),
-                              borderRadius: BorderRadius.circular(30),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Welcome Back!',
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Enter your phone number to continue',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                  ),
-                                ),
-                                const SizedBox(height: 32),
-                                // Phone Input
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.1),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: TextField(
-                                    controller: _phoneController,
-                                    keyboardType: TextInputType.phone,
-                                    maxLength: 10,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 1,
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText: 'Phone Number',
-                                      hintStyle: TextStyle(
-                                        color: Colors.grey.shade400,
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                      prefixIcon: Container(
-                                        padding: const EdgeInsets.all(16),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              '🇮🇳',
-                                              style: TextStyle(fontSize: 24),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              '+91',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.black87,
-                                              ),
-                                            ),
-                                            Container(
-                                              width: 1,
-                                              height: 24,
-                                              color: Colors.grey.shade300,
-                                              margin: const EdgeInsets.only(left: 12),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      counterText: '',
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                        borderSide: BorderSide(
-                                          color: const Color(0xFF00C853),
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                // Send OTP Button
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 56,
-                                  child: ElevatedButton(
-                                    onPressed: _isLoading ? null : _sendOTP,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: const Color(0xFF00C853),
-                                      elevation: 8,
-                                      shadowColor: Colors.black.withValues(alpha: 0.3),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                    ),
-                                    child: _isLoading
-                                        ? const SizedBox(
-                                            height: 24,
-                                            width: 24,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2.5,
-                                              valueColor: AlwaysStoppedAnimation<Color>(
-                                                Color(0xFF00C853),
-                                              ),
-                                            ),
-                                          )
-                                        : Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              const Text(
-                                                'Send OTP',
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 0.5,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              const Icon(Icons.arrow_forward_rounded, size: 24),
-                                            ],
-                                          ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                    ),
+                    const SizedBox(height: 56),
+
+                    // Headline
+                    _buildStaggered(
+                      0.25,
+                      0.55,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Enter your number',
+                          style: GoogleFonts.bebasNeue(
+                            fontSize: 40,
+                            color: AppColors.textWhite,
+                            letterSpacing: 1,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 40),
-                      // Trust Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.verified_user_rounded,
-                              size: 20,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Secure & Verified',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Phone Input
+                    _buildStaggered(0.3, 0.6, child: _buildPhoneInput()),
+                    const SizedBox(height: 24),
+
+                    // Send OTP Button
+                    _buildStaggered(0.4, 0.7, child: _buildSendOTPButton()),
+                    const SizedBox(height: 32),
+
+                    // Trust Badge
+                    _buildStaggered(0.5, 0.8, child: _buildTrustBadge()),
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
             ),
@@ -383,10 +235,227 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
+  Widget _buildStaggered(double begin, double end, {required Widget child}) {
+    return FadeTransition(
+      opacity: _staggerFade(begin, end),
+      child: SlideTransition(
+        position: _staggerSlide(begin, end),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 1200),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.elasticOut,
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: child,
+        );
+      },
+      child: Container(
+        width: 120,
+        height: 120,
+        decoration: BoxDecoration(
+          color: AppColors.cardBg,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: AppColors.neonLime,
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.neonLime.withValues(alpha: 0.15),
+              blurRadius: 30,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.eco_rounded,
+          size: 60,
+          color: AppColors.neonLime,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhoneInput() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _isPhoneFocused ? AppColors.neonLime : AppColors.borderDefault,
+          width: _isPhoneFocused ? 1.5 : 1,
+        ),
+        boxShadow: _isPhoneFocused
+            ? [
+                BoxShadow(
+                  color: AppColors.neonLime.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  spreadRadius: 0,
+                ),
+              ]
+            : [],
+      ),
+      child: TextField(
+        controller: _phoneController,
+        focusNode: _phoneFocusNode,
+        keyboardType: TextInputType.phone,
+        maxLength: 10,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        style: GoogleFonts.dmSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textWhite,
+          letterSpacing: 1.5,
+        ),
+        cursorColor: AppColors.neonLime,
+        decoration: InputDecoration(
+          hintText: 'Phone Number',
+          hintStyle: GoogleFonts.dmSans(
+            color: AppColors.textTertiary,
+            fontSize: 18,
+            fontWeight: FontWeight.w400,
+          ),
+          prefixIcon: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.neonLime.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('\u{1F1EE}\u{1F1F3}',
+                          style: TextStyle(fontSize: 18)),
+                      const SizedBox(width: 6),
+                      Text(
+                        '+91',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textWhite,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: AppColors.borderActive,
+                  margin: const EdgeInsets.only(left: 12),
+                ),
+              ],
+            ),
+          ),
+          counterText: '',
+          filled: true,
+          fillColor: Colors.transparent,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSendOTPButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _sendOTP,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.neonLime,
+          foregroundColor: AppColors.textOnLime,
+          disabledBackgroundColor: AppColors.neonLime.withValues(alpha: 0.5),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppColors.neonLime),
+                ),
+              )
+            : Text(
+                'SEND OTP',
+                style: GoogleFonts.bebasNeue(
+                  fontSize: 20,
+                  color: AppColors.textOnLime,
+                  letterSpacing: 2,
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildTrustBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface3,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.verified_user_rounded,
+            size: 18,
+            color: AppColors.textWhite,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Secure & Verified',
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              color: AppColors.textWhite,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _phoneController.dispose();
-    _animationController.dispose();
+    _phoneFocusNode.dispose();
+    _entranceController.dispose();
+    _staggerController.dispose();
     super.dispose();
   }
 }

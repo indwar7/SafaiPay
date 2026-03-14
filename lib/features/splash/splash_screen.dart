@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../routes/app_routes.dart';
 
@@ -13,227 +14,401 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _rotateAnimation;
+    with TickerProviderStateMixin {
+  // Individual icon controllers for spring bounce
+  late AnimationController _icon1Controller;
+  late AnimationController _icon2Controller;
+  late AnimationController _icon3Controller;
+
+  // Background glow pulse
+  late AnimationController _glowController;
+
+  // Particle float
+  late AnimationController _particleController;
+
+  // Text and UI state
+  bool _showName = false;
+  bool _showTagline = false;
+  bool _showLoader = false;
+  bool _iconsVisible1 = false;
+  bool _iconsVisible2 = false;
+  bool _iconsVisible3 = false;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
+
+    _icon1Controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _icon2Controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _icon3Controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _glowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
-    );
+    )..repeat(reverse: true);
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-      ),
-    );
+    _particleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 6000),
+    )..repeat();
 
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.6, curve: Curves.elasticOut),
-      ),
-    );
-
-    _rotateAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.3, 0.8, curve: Curves.easeInOut),
-      ),
-    );
-
-    _animationController.forward();
-
-    Timer(const Duration(seconds: 3), () {
-      _checkAuthStatus();
-    });
+    _startAnimationSequence();
   }
 
-  void _checkAuthStatus() {
-    
+  Future<void> _startAnimationSequence() async {
+    // Phase 1: Eco leaf icon bounces in
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+    setState(() => _iconsVisible1 = true);
+    _icon1Controller.forward();
+
+    // Phase 2: Broom icon bounces in
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    setState(() => _iconsVisible2 = true);
+    _icon2Controller.forward();
+
+    // Phase 3: Phone payment icon bounces in
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    setState(() => _iconsVisible3 = true);
+    _icon3Controller.forward();
+
+    // Phase 4: Show app name
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    setState(() => _showName = true);
+
+    // Phase 5: Show tagline
+    await Future.delayed(const Duration(milliseconds: 1000));
+    if (!mounted) return;
+    setState(() => _showTagline = true);
+
+    // Phase 6: Show loader
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+    setState(() => _showLoader = true);
+
+    // Navigate
+    await Future.delayed(const Duration(milliseconds: 1000));
+    if (mounted) {
       Navigator.of(context).pushReplacementNamed(AppRoutes.mainApp);
-    } 
-     
-  
+    }
+  }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _icon1Controller.dispose();
+    _icon2Controller.dispose();
+    _icon3Controller.dispose();
+    _glowController.dispose();
+    _particleController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF4F7F5),
-              Color(0xFFFFFFFF),
-              Color(0xFFE8F8F5),
-            ],
-          ),
-        ),
-        child: Stack(
-          children: [
-            // Animated background particles
-            ...List.generate(20, (index) {
-              return AnimatedBuilder(
-                animation: _animationController,
-                builder: (context, child) {
-                  return Positioned(
-                    left: (index % 5) * (MediaQuery.of(context).size.width / 5),
-                    top: (index ~/ 5) *
-                            (MediaQuery.of(context).size.height / 4) +
-                        (50 * _animationController.value),
-                    child: Opacity(
-                      opacity: 0.1 * (1 - _animationController.value),
-                      child: Icon(
-                        index % 2 == 0 ? Icons.eco : Icons.recycling,
-                        size: 30,
-                        color: AppColors.primaryGreen,
-                      ),
-                    ),
-                  );
-                },
-              );
-            }),
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          // Animated background glow
+          _buildAnimatedBackground(),
 
-            // Main content
-            Center(
-              child: AnimatedBuilder(
-                animation: _animationController,
-                builder: (context, child) {
-                  return FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Animated logo
-                        ScaleTransition(
-                          scale: _scaleAnimation,
-                          child: RotationTransition(
-                            turns: Tween<double>(begin: 0.0, end: 0.1)
-                                .animate(_rotateAnimation),
-                            child: Container(
-                              width: 140,
-                              height: 140,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFF2ECC71),
-                                    Color(0xFF27AE60),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(35),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        AppColors.primaryGreen.withOpacity(0.4),
-                                    blurRadius: 40,
-                                    offset: const Offset(0, 20),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.eco,
-                                size: 70,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
+          // Floating particles
+          _buildParticles(),
 
-                        // Animated app name
-                        AnimatedTextKit(
+          // Main content
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(flex: 3),
+
+                // Three animated icons in a row
+                _buildIconRow(),
+
+                const SizedBox(height: 40),
+
+                // App name
+                SizedBox(
+                  height: 56,
+                  child: _showName
+                      ? AnimatedTextKit(
+                          isRepeatingAnimation: false,
                           animatedTexts: [
                             TypewriterAnimatedText(
                               'SafaiPay',
-                              textStyle: const TextStyle(
-                                fontSize: 42,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.black,
-                                letterSpacing: 2,
+                              textStyle: GoogleFonts.bebasNeue(
+                                fontSize: 52,
+                                color: AppColors.textWhite,
+                                letterSpacing: 3,
                               ),
-                              speed: const Duration(milliseconds: 150),
+                              speed: const Duration(milliseconds: 80),
                             ),
                           ],
-                          totalRepeatCount: 1,
-                          pause: const Duration(milliseconds: 1000),
-                          displayFullTextOnTap: true,
-                          stopPauseOnTap: true,
-                        ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
 
-                        const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
-                        // Animated tagline
-                        FadeTransition(
-                          opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-                            CurvedAnimation(
-                              parent: _animationController,
-                              curve: const Interval(0.6, 1.0,
-                                  curve: Curves.easeIn),
-                            ),
-                          ),
-                          child: AnimatedTextKit(
-                            animatedTexts: [
-                              FadeAnimatedText(
-                                'Clean Actions. Real Rewards.',
-                                textStyle: TextStyle(
-                                  fontSize: 16,
-                                  color: AppColors.greyText,
-                                  letterSpacing: 0.8,
-                                ),
-                                duration: const Duration(milliseconds: 1000),
+                // Tagline
+                SizedBox(
+                  height: 30,
+                  child: _showTagline
+                      ? AnimatedTextKit(
+                          isRepeatingAnimation: false,
+                          animatedTexts: [
+                            TypewriterAnimatedText(
+                              'Clean Actions. Real Rewards.',
+                              textStyle: GoogleFonts.dmSans(
+                                fontSize: 18,
+                                color: AppColors.neonLime,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.5,
                               ),
-                            ],
-                            totalRepeatCount: 1,
-                          ),
-                        ),
-
-                        const SizedBox(height: 50),
-
-                        // Loading indicator
-                        FadeTransition(
-                          opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-                            CurvedAnimation(
-                              parent: _animationController,
-                              curve: const Interval(0.7, 1.0,
-                                  curve: Curves.easeIn),
+                              speed: const Duration(milliseconds: 30),
                             ),
-                          ),
-                          child: SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.primaryGreen,
-                              ),
-                              strokeWidth: 3,
-                            ),
-                          ),
-                        ),
-                      ],
+                          ],
+                        )
+                      : const SizedBox.shrink(),
+                ),
+
+                const Spacer(flex: 2),
+
+                // Loading indicator
+                AnimatedOpacity(
+                  opacity: _showLoader ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 400),
+                  child: const SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.neonLime,
+                      ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                ),
+
+                const SizedBox(height: 60),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: _glowController,
+      builder: (context, child) {
+        final glowValue = _glowController.value;
+        return Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(-0.3, -0.4),
+              radius: 1.2 + (glowValue * 0.3),
+              colors: [
+                Color.lerp(
+                  const Color(0xFF1E3010),
+                  const Color(0xFF2A4A18),
+                  glowValue,
+                )!,
+                const Color(0xFF0F1808),
+                const Color(0xFF0A0A0A),
+              ],
+              stops: const [0.0, 0.5, 1.0],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildParticles() {
+    return AnimatedBuilder(
+      animation: _particleController,
+      builder: (context, child) {
+        return CustomPaint(
+          size: MediaQuery.of(context).size,
+          painter: _ParticlePainter(_particleController.value),
+        );
+      },
+    );
+  }
+
+  Widget _buildIconRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Icon 1: Eco leaf
+        _buildAnimatedIcon(
+          controller: _icon1Controller,
+          visible: _iconsVisible1,
+          icon: Icons.eco_rounded,
+          size: 72,
+          iconSize: 36,
+        ),
+        const SizedBox(width: 20),
+
+        // Icon 2: Broom / cleaning
+        _buildAnimatedIcon(
+          controller: _icon2Controller,
+          visible: _iconsVisible2,
+          icon: Icons.cleaning_services_rounded,
+          size: 72,
+          iconSize: 36,
+        ),
+        const SizedBox(width: 20),
+
+        // Icon 3: Mobile payment
+        _buildAnimatedIcon(
+          controller: _icon3Controller,
+          visible: _iconsVisible3,
+          icon: Icons.smartphone_rounded,
+          size: 72,
+          iconSize: 36,
+          overlay: Icons.currency_rupee_rounded,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAnimatedIcon({
+    required AnimationController controller,
+    required bool visible,
+    required IconData icon,
+    required double size,
+    required double iconSize,
+    IconData? overlay,
+  }) {
+    if (!visible) {
+      return SizedBox(width: size, height: size);
+    }
+
+    final scaleAnim = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 1.2)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.2, end: 1.0)
+            .chain(CurveTween(curve: Curves.elasticOut)),
+        weight: 50,
+      ),
+    ]).animate(controller);
+
+    final fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+      ),
+    );
+
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: scaleAnim.value,
+          child: Opacity(
+            opacity: fadeAnim.value,
+            child: child,
+          ),
+        );
+      },
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A3008),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: AppColors.neonLime.withValues(alpha: 0.4),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.neonLime.withValues(alpha: 0.2),
+              blurRadius: 20,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(icon, size: iconSize, color: AppColors.neonLime),
+            if (overlay != null)
+              Positioned(
+                right: 10,
+                bottom: 10,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: AppColors.neonLime,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    overlay,
+                    size: 14,
+                    color: AppColors.textOnLime,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
+}
+
+/// Floating green particles for ambient effect
+class _ParticlePainter extends CustomPainter {
+  final double progress;
+  _ParticlePainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rng = Random(42);
+    const count = 15;
+
+    for (int i = 0; i < count; i++) {
+      final baseX = rng.nextDouble() * size.width;
+      final baseY = rng.nextDouble() * size.height;
+      final speed = 0.3 + rng.nextDouble() * 0.7;
+      final radius = 1.5 + rng.nextDouble() * 2.5;
+      final phase = rng.nextDouble() * 2 * pi;
+
+      final x = baseX + sin((progress * speed * 2 * pi) + phase) * 20;
+      final y = baseY - (progress * speed * 60) % size.height;
+      final adjustedY = y < 0 ? y + size.height : y;
+
+      final alpha = 0.15 + sin((progress * 2 * pi) + phase).abs() * 0.2;
+
+      final paint = Paint()
+        ..color = const Color(0xFFC6F135).withValues(alpha: alpha)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+
+      canvas.drawCircle(Offset(x, adjustedY), radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ParticlePainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }

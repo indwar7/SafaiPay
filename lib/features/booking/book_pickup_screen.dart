@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../models/booking_model.dart';
 import '../../core/theme/app_colors.dart';
+// ignore: unused_import
 import '../../core/widgets/primary_button.dart';
 import '../../core/constants/app_constants.dart';
 import 'package:uuid/uuid.dart';
@@ -21,7 +23,16 @@ class _BookPickupScreenState extends State<BookPickupScreen> {
   DateTime? _selectedDate;
   String? _selectedTimeSlot;
   String? _selectedWasteType;
+  double _weightKg = 5.0;
   bool _isLoading = false;
+
+  static const _wasteTypes = [
+    {'name': 'Dry Waste', 'emoji': '\u{1F4E6}', 'rate': '+10/kg'},
+    {'name': 'Wet Waste', 'emoji': '\u{1F34C}', 'rate': '+10/kg'},
+    {'name': 'E-Waste', 'emoji': '\u{1F50B}', 'rate': '+10/kg'},
+    {'name': 'Hazardous', 'emoji': '\u{2622}\u{FE0F}', 'rate': '+10/kg'},
+    {'name': 'Mixed', 'emoji': '\u{267B}\u{FE0F}', 'rate': '+10/kg'},
+  ];
 
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
@@ -31,9 +42,15 @@ class _BookPickupScreenState extends State<BookPickupScreen> {
       lastDate: DateTime.now().add(const Duration(days: 30)),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryGreen,
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.neonLime,
+              onPrimary: AppColors.textOnLime,
+              surface: AppColors.cardBg,
+              onSurface: AppColors.textWhite,
+            ),
+            dialogTheme: const DialogThemeData(
+              backgroundColor: AppColors.primaryBg,
             ),
           ),
           child: child!,
@@ -55,7 +72,7 @@ class _BookPickupScreenState extends State<BookPickupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill all fields'),
-          backgroundColor: AppColors.red,
+          backgroundColor: AppColors.error,
         ),
       );
       return;
@@ -82,7 +99,7 @@ class _BookPickupScreenState extends State<BookPickupScreen> {
 
     try {
       await context.read<BookingProvider>().createBooking(booking);
-      
+
       // Update user's total bookings
       final updatedUser = user.copyWith(
         totalBookings: user.totalBookings + 1,
@@ -93,7 +110,7 @@ class _BookPickupScreenState extends State<BookPickupScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Pickup booked successfully!'),
-            backgroundColor: AppColors.primaryGreen,
+            backgroundColor: AppColors.neonLime,
           ),
         );
         Navigator.pop(context);
@@ -102,7 +119,7 @@ class _BookPickupScreenState extends State<BookPickupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to book pickup: $e'),
-          backgroundColor: AppColors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     } finally {
@@ -113,214 +130,431 @@ class _BookPickupScreenState extends State<BookPickupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.offWhite,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Book Pickup',
-          style: TextStyle(color: AppColors.black),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Schedule a pickup',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Book a waste collection from your doorstep',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.greyText,
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Address
-            const Text(
-              'Pickup Address',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _addressController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                hintText: 'Enter your complete address',
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Waste Type
-            const Text(
-              'Waste Type',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: AppConstants.wasteTypes.map((type) {
-                final isSelected = _selectedWasteType == type;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedWasteType = type;
-                    });
-                  },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primaryGreen
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primaryGreen
-                            : AppColors.greyLight,
+            // Header
+            Container(
+              color: Colors.transparent,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface3,
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                    ),
-                    child: Text(
-                      type,
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : AppColors.black,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      child: const Icon(Icons.arrow_back,
+                          color: AppColors.textWhite, size: 20),
                     ),
                   ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 24),
-
-            // Date
-            const Text(
-              'Pickup Date',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: _selectDate,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today, color: AppColors.primaryGreen),
-                    const SizedBox(width: 12),
-                    Text(
-                      _selectedDate != null
-                          ? DateFormat('dd MMM yyyy').format(_selectedDate!)
-                          : 'Select date',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: _selectedDate != null
-                            ? AppColors.black
-                            : AppColors.greyText,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Time Slot
-            const Text(
-              'Time Slot',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Column(
-              children: AppConstants.timeSlots.map((slot) {
-                final isSelected = _selectedTimeSlot == slot;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedTimeSlot = slot;
-                    });
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primaryGreen.withOpacity(0.1)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primaryGreen
-                            : AppColors.greyLight,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          isSelected
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_unchecked,
-                          color: isSelected
-                              ? AppColors.primaryGreen
-                              : AppColors.greyText,
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Book Pickup',
+                        style: GoogleFonts.bebasNeue(
+                          fontSize: 36,
+                          color: AppColors.textWhite,
+                          height: 1.1,
                         ),
-                        const SizedBox(width: 12),
+                      ),
+                      Text(
+                        'Schedule a garbage pickup',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+
+                    // ADDRESS
+                    Text(
+                      'Pickup Address',
+                      style: GoogleFonts.barlow(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textWhite,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBg,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: TextField(
+                        controller: _addressController,
+                        maxLines: 3,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 14,
+                          color: AppColors.textWhite,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Enter your complete address',
+                          hintStyle: GoogleFonts.dmSans(
+                            fontSize: 14,
+                            color: AppColors.textTertiary,
+                          ),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          contentPadding: const EdgeInsets.all(16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(
+                              color: AppColors.neonLime,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+
+                    // WASTE TYPE SELECTOR
+                    Text(
+                      'Waste Type',
+                      style: GoogleFonts.barlow(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textWhite,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 100,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _wasteTypes.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final wt = _wasteTypes[index];
+                          final isSelected =
+                              _selectedWasteType == wt['name'];
+                          return GestureDetector(
+                            onTap: () => setState(
+                                () => _selectedWasteType = wt['name'] as String),
+                            child: AnimatedScale(
+                              scale: isSelected ? 1.05 : 1.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: 100,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 14, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.neonLime
+                                      : AppColors.cardBg,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: isSelected
+                                      ? null
+                                      : Border.all(color: AppColors.borderDefault),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      wt['emoji'] as String,
+                                      style: const TextStyle(fontSize: 24),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      wt['name'] as String,
+                                      style: GoogleFonts.dmSans(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isSelected
+                                            ? AppColors.textOnLime
+                                            : AppColors.textWhite,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      wt['rate'] as String,
+                                      style: GoogleFonts.dmSans(
+                                        fontSize: 10,
+                                        color: isSelected
+                                            ? AppColors.textOnLime
+                                                .withValues(alpha: 0.7)
+                                            : AppColors.textTertiary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+
+                    // DATE PICKER
+                    Text(
+                      'Pickup Date',
+                      style: GoogleFonts.barlow(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textWhite,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: _selectDate,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardBg,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today,
+                                color: AppColors.neonLime, size: 22),
+                            const SizedBox(width: 12),
+                            Text(
+                              _selectedDate != null
+                                  ? DateFormat('dd MMM yyyy')
+                                      .format(_selectedDate!)
+                                  : 'Select date',
+                              style: GoogleFonts.dmSans(
+                                fontSize: 16,
+                                color: _selectedDate != null
+                                    ? AppColors.textWhite
+                                    : AppColors.textTertiary,
+                              ),
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.chevron_right,
+                                color: AppColors.textTertiary, size: 22),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+
+                    // TIME SLOTS GRID
+                    Text(
+                      'Time Slot',
+                      style: GoogleFonts.barlow(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textWhite,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 2.8,
+                      ),
+                      itemCount: AppConstants.timeSlots.length,
+                      itemBuilder: (context, index) {
+                        final slot = AppConstants.timeSlots[index];
+                        final isSelected = _selectedTimeSlot == slot;
+                        return GestureDetector(
+                          onTap: () =>
+                              setState(() => _selectedTimeSlot = slot),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppColors.surface2
+                                  : AppColors.cardBg,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppColors.neonLime
+                                    : AppColors.borderDefault,
+                                width: isSelected ? 1.5 : 1,
+                              ),
+                            ),
+                            child: Text(
+                              slot,
+                              style: GoogleFonts.barlow(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isSelected
+                                    ? AppColors.neonLime
+                                    : AppColors.textWhite,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 28),
+
+                    // WEIGHT ESTIMATE
+                    Text(
+                      'Estimated Weight',
+                      style: GoogleFonts.barlow(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textWhite,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: Text(
+                        '${_weightKg.toStringAsFixed(1)} kg',
+                        style: GoogleFonts.bebasNeue(
+                          fontSize: 32,
+                          color: AppColors.neonLime,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: AppColors.neonLime,
+                        inactiveTrackColor: AppColors.surface3,
+                        thumbColor: AppColors.neonLime,
+                        overlayColor: AppColors.neonLime.withValues(alpha: 0.15),
+                        thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 10),
+                        trackHeight: 6,
+                      ),
+                      child: Slider(
+                        value: _weightKg,
+                        min: 1,
+                        max: 50,
+                        divisions: 98,
+                        onChanged: (v) => setState(() => _weightKg = v),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
                         Text(
-                          slot,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: AppColors.black,
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
+                          '1 kg',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                        Text(
+                          '50 kg',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            color: AppColors.textTertiary,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 32),
+                    const SizedBox(height: 12),
+                    // Estimated points preview
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.limePointsBanner,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.neonLime.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.star_rounded,
+                              color: AppColors.neonLime, size: 22),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Estimated points: ',
+                            style: GoogleFonts.dmSans(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            '+${(_weightKg * 10).toInt()}',
+                            style: GoogleFonts.bebasNeue(
+                              fontSize: 22,
+                              color: AppColors.neonLime,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
 
-            PrimaryButton(
-              text: 'Confirm Booking',
-              onPressed: _bookPickup,
-              isLoading: _isLoading,
+                    // CONFIRM BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _bookPickup,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.neonLime,
+                          disabledBackgroundColor:
+                              AppColors.neonLime.withValues(alpha: 0.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: AppColors.textOnLime,
+                                ),
+                              )
+                            : Text(
+                                'CONFIRM BOOKING',
+                                style: GoogleFonts.bebasNeue(
+                                  fontSize: 20,
+                                  color: AppColors.textOnLime,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
