@@ -1,9 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class TransactionModel {
   final String id;
   final String userId;
-  final String type; // earned, redeemed
+  final String type; // earned, redeemed, withdrawn
   final int points;
   final String description;
   final DateTime createdAt;
@@ -17,25 +15,16 @@ class TransactionModel {
     required this.createdAt,
   });
 
-  factory TransactionModel.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map<String, dynamic>;
+  factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
-      id: doc.id,
-      userId: data['userId'] ?? '',
-      type: data['type'] ?? '',
-      points: data['points'] ?? 0,
-      description: data['description'] ?? '',
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      id: json['id'] ?? '',
+      userId: json['user_id'] ?? json['userId'] ?? '',
+      type: json['type'] ?? '',
+      points: json['points'] ?? 0,
+      description: json['description'] ?? '',
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'userId': userId,
-      'type': type,
-      'points': points,
-      'description': description,
-      'createdAt': Timestamp.fromDate(createdAt),
-    };
   }
 }

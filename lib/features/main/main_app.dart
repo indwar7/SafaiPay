@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../../providers/user_provider.dart';
+import '../../services/auth_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
 import '../home/home_screen.dart';
@@ -78,11 +79,26 @@ class _MainAppState extends State<MainApp> with TickerProviderStateMixin {
     }).toList();
   }
 
-  void _loadUser() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<UserProvider>().loadUser(user.uid);
+  void _loadUser() async {
+    final isLoggedIn = await AuthService().isLoggedIn();
+    if (isLoggedIn && mounted) {
+      final userProvider = context.read<UserProvider>();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await userProvider.loadUser();
+
+        // Register FCM token with backend
+        try {
+          final fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken != null) {
+            await userProvider.sendFcmToken(fcmToken);
+          }
+          // Listen for token refresh
+          FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+            userProvider.sendFcmToken(newToken);
+          });
+        } catch (e) {
+          debugPrint('FCM token registration failed: $e');
+        }
       });
     }
   }

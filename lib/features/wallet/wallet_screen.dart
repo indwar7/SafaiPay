@@ -3,8 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/user_provider.dart';
-import '../../services/firestore_service.dart';
-import '../../services/payment_service.dart';
+import '../../services/api_service.dart';
 import '../../models/transaction_model.dart';
 import '../../core/theme/app_colors.dart';
 
@@ -18,8 +17,7 @@ class WalletScreen extends StatefulWidget {
 class _WalletScreenState extends State<WalletScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final FirestoreService _firestoreService = FirestoreService();
-  final PaymentService _paymentService = PaymentService();
+  final ApiService _apiService = ApiService();
   List<TransactionModel> _transactions = [];
   bool _isLoading = false;
 
@@ -28,43 +26,12 @@ class _WalletScreenState extends State<WalletScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _loadTransactions();
-    _initializePayment();
-  }
-
-  void _initializePayment() {
-    _paymentService.initialize(
-      onSuccess: (paymentId) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Withdrawal successful!',
-              style: GoogleFonts.dmSans(color: AppColors.textOnLime),
-            ),
-            backgroundColor: AppColors.neonLime,
-          ),
-        );
-      },
-      onError: (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              error,
-              style: GoogleFonts.dmSans(color: AppColors.textWhite),
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      },
-    );
   }
 
   Future<void> _loadTransactions() async {
-    final user = context.read<UserProvider>().currentUser;
-    if (user == null) return;
-
     setState(() => _isLoading = true);
     try {
-      _transactions = await _firestoreService.getUserTransactions(user.uid);
+      _transactions = await _apiService.getTransactions();
     } catch (e) {
       debugPrint('Error loading transactions: $e');
     } finally {
@@ -218,13 +185,39 @@ class _WalletScreenState extends State<WalletScreen>
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              _paymentService.startPayment(
-                amount: user.walletBalance,
-                name: user.name ?? 'User',
-                phoneNumber: user.phoneNumber,
-              );
+              try {
+                await _apiService.withdraw(user.walletBalance.toDouble());
+                // Reload profile + transactions
+                if (context.mounted) {
+                  context.read<UserProvider>().loadUser();
+                }
+                await _loadTransactions();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Withdrawal submitted! You\'ll receive it in 2-3 business days.',
+                        style: GoogleFonts.dmSans(color: AppColors.textOnLime),
+                      ),
+                      backgroundColor: AppColors.neonLime,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        e.toString().replaceAll('Exception: ', ''),
+                        style: GoogleFonts.dmSans(color: AppColors.textWhite),
+                      ),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.neonLime,
@@ -597,7 +590,6 @@ class _WalletScreenState extends State<WalletScreen>
   @override
   void dispose() {
     _tabController.dispose();
-    _paymentService.dispose();
     super.dispose();
   }
 }

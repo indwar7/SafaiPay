@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class UserModel {
   final String uid;
   final String phoneNumber;
@@ -29,40 +27,34 @@ class UserModel {
     this.lastCheckIn,
   });
 
-  factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map<String, dynamic>;
+  factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      uid: doc.id,
-      phoneNumber: data['phoneNumber'] ?? '',
-      name: data['name'],
-      ward: data['ward'],
-      address: data['address'],
-      points: data['points'] ?? 0,
-      walletBalance: data['walletBalance'] ?? 0,
-      totalReports: data['totalReports'] ?? 0,
-      totalBookings: data['totalBookings'] ?? 0,
-      streak: data['streak'] ?? 0,
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      lastCheckIn: data['lastCheckIn'] != null
-          ? (data['lastCheckIn'] as Timestamp).toDate()
+      uid: json['id'] ?? json['uid'] ?? '',
+      phoneNumber: json['phone_number'] ?? json['phoneNumber'] ?? '',
+      name: json['name'],
+      ward: json['ward'],
+      address: json['address'],
+      points: json['points'] ?? 0,
+      walletBalance: (json['wallet_balance'] ?? json['walletBalance'] ?? 0) is double
+          ? (json['wallet_balance'] ?? json['walletBalance'] ?? 0).toInt()
+          : json['wallet_balance'] ?? json['walletBalance'] ?? 0,
+      totalReports: json['total_reports'] ?? json['totalReports'] ?? 0,
+      totalBookings: json['total_bookings'] ?? json['totalBookings'] ?? 0,
+      streak: json['streak'] ?? 0,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      lastCheckIn: json['last_check_in'] != null
+          ? DateTime.parse(json['last_check_in'])
           : null,
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
-      'phoneNumber': phoneNumber,
       'name': name,
       'ward': ward,
       'address': address,
-      'points': points,
-      'walletBalance': walletBalance,
-      'totalReports': totalReports,
-      'totalBookings': totalBookings,
-      'streak': streak,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'lastCheckIn':
-          lastCheckIn != null ? Timestamp.fromDate(lastCheckIn!) : null,
     };
   }
 

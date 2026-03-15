@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/user_provider.dart';
-import '../../services/firestore_service.dart';
+import '../../services/api_service.dart';
 import '../../models/user_model.dart';
 import '../../core/theme/app_colors.dart';
 import 'package:confetti/confetti.dart';
@@ -16,7 +16,7 @@ class RewardsScreen extends StatefulWidget {
 
 class _RewardsScreenState extends State<RewardsScreen>
     with SingleTickerProviderStateMixin {
-  final FirestoreService _firestoreService = FirestoreService();
+  final ApiService _apiService = ApiService();
   List<UserModel> _leaderboard = [];
   bool _isLoading = false;
   late ConfettiController _confettiController;
@@ -46,7 +46,7 @@ class _RewardsScreenState extends State<RewardsScreen>
   Future<void> _loadLeaderboard() async {
     setState(() => _isLoading = true);
     try {
-      _leaderboard = await _firestoreService.getLeaderboard(limit: 20);
+      _leaderboard = await _apiService.getLeaderboard(limit: 20);
     } catch (e) {
       debugPrint('Error loading leaderboard: $e');
     } finally {

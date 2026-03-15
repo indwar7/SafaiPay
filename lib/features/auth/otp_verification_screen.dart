@@ -1,21 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/auth_service.dart';
-import '../../services/firestore_service.dart';
-import '../../models/user_model.dart';
+import '../../providers/user_provider.dart';
 import '../../routes/app_routes.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
-  final String verificationId;
   final String phoneNumber;
 
   const OTPVerificationScreen({
     super.key,
-    required this.verificationId,
     required this.phoneNumber,
   });
 
@@ -29,7 +26,6 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   final AuthService _authService = AuthService();
-  final FirestoreService _firestoreService = FirestoreService();
   bool _isLoading = false;
 
   late AnimationController _entranceController;
@@ -139,38 +135,42 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
     }
 
     setState(() => _isLoading = true);
+    final userProvider = context.read<UserProvider>();
 
     try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: widget.verificationId,
-        smsCode: otp,
+      final user = await _authService.verifyOtp(
+        phone: widget.phoneNumber,
+        otp: otp,
       );
-      final userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
-
-      // Check if user exists
-      final existingUser =
-          await _firestoreService.getUserById(userCredential.user!.uid);
-
-      if (existingUser == null) {
-        // Create new user
-        final newUser = UserModel(
-          uid: userCredential.user!.uid,
-          phoneNumber: widget.phoneNumber,
-          createdAt: DateTime.now(),
-        );
-        await _firestoreService.createUser(newUser);
-      }
 
       if (mounted) {
+        if (user != null) {
+          userProvider.setUser(user);
+        }
+
         _showSnackBar('Login successful!', isError: false);
         await Future.delayed(const Duration(milliseconds: 500));
-        Navigator.of(context).pushReplacementNamed(AppRoutes.mainApp);
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.mainApp);
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
       _showSnackBar('Invalid OTP. Please check and try again.', isError: true);
     }
+  }
+
+  void _resendOtp() {
+    _authService.sendOtp(
+      phone: widget.phoneNumber,
+      onSuccess: () {
+        _showSnackBar('OTP resent!', isError: false);
+        _startResendTimer();
+      },
+      onError: (error) {
+        _showSnackBar(error, isError: true);
+      },
+    );
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
@@ -418,10 +418,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
   Widget _buildResendSection() {
     if (_canResend) {
       return GestureDetector(
-        onTap: () {
-          _showSnackBar('Resending OTP...', isError: false);
-          _startResendTimer();
-        },
+        onTap: _resendOtp,
         child: Text(
           'Resend OTP',
           style: GoogleFonts.dmSans(

@@ -90,12 +90,11 @@ class _LoginScreenState extends State<LoginScreen>
 
     await _authService.sendOtp(
       phone: phoneNumber,
-      onCodeSent: (verificationId) {
+      onSuccess: () {
         setState(() => _isLoading = false);
         Navigator.of(context).pushNamed(
           AppRoutes.otpVerification,
           arguments: {
-            'verificationId': verificationId,
             'phoneNumber': phoneNumber,
           },
         );

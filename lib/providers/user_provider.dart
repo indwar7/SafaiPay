@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
-import '../services/firestore_service.dart';
+import '../services/api_service.dart';
 
 class UserProvider with ChangeNotifier {
   UserModel? _currentUser;
@@ -14,15 +14,15 @@ class UserProvider with ChangeNotifier {
   bool get isAuthenticated => _currentUser != null;
 
   final AuthService _authService = AuthService();
-  final FirestoreService _firestoreService = FirestoreService();
+  final ApiService _apiService = ApiService();
 
-  Future<void> loadUser(String uid) async {
+  Future<void> loadUser() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _currentUser = await _firestoreService.getUserById(uid);
+      _currentUser = await _apiService.getProfile();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -31,13 +31,24 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateUser(UserModel user) async {
+  void setUser(UserModel user) {
+    _currentUser = user;
+    notifyListeners();
+  }
+
+  Future<void> updateUser({String? name, String? ward, String? address}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _firestoreService.updateUser(user);
-      _currentUser = user;
+      final updated = await _apiService.updateProfile(
+        name: name,
+        ward: ward,
+        address: address,
+      );
+      if (updated != null) {
+        _currentUser = updated;
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -46,74 +57,57 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addPoints(int points, String description) async {
-    if (_currentUser == null) return;
-
-    final updatedUser = _currentUser!.copyWith(
-      points: _currentUser!.points + points,
-    );
-
-    await updateUser(updatedUser);
-    await _firestoreService.addTransaction(
-      userId: _currentUser!.uid,
-      type: 'earned',
-      points: points,
-      description: description,
-    );
+  Future<void> sendFcmToken(String fcmToken) async {
+    try {
+      await _apiService.updateProfile(fcmToken: fcmToken);
+    } catch (e) {
+      debugPrint('Failed to send FCM token: $e');
+    }
   }
 
   Future<void> redeemPoints(int points) async {
     if (_currentUser == null || _currentUser!.points < points) return;
 
-    final updatedUser = _currentUser!.copyWith(
-      points: _currentUser!.points - points,
-      walletBalance: _currentUser!.walletBalance + points,
-    );
+    _isLoading = true;
+    notifyListeners();
 
-    await updateUser(updatedUser);
-    await _firestoreService.addTransaction(
-      userId: _currentUser!.uid,
-      type: 'redeemed',
-      points: points,
-      description: 'Redeemed to wallet',
-    );
+    try {
+      await _apiService.redeemPoints(points);
+      // Reload profile to get updated balances
+      _currentUser = await _apiService.getProfile();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> dailyCheckIn() async {
     if (_currentUser == null) return;
 
-    final now = DateTime.now();
-    final lastCheckIn = _currentUser!.lastCheckIn;
+    _isLoading = true;
+    notifyListeners();
 
-    // Check if already checked in today
-    if (lastCheckIn != null &&
-        lastCheckIn.year == now.year &&
-        lastCheckIn.month == now.month &&
-        lastCheckIn.day == now.day) {
-      return;
-    }
-
-    // Calculate streak
-    int newStreak = 1;
-    if (lastCheckIn != null) {
-      final difference = now.difference(lastCheckIn).inDays;
-      if (difference == 1) {
-        newStreak = _currentUser!.streak + 1;
+    try {
+      final updated = await _apiService.dailyCheckIn();
+      if (updated != null) {
+        _currentUser = updated;
+      } else {
+        // Reload profile to reflect check-in
+        _currentUser = await _apiService.getProfile();
       }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    final updatedUser = _currentUser!.copyWith(
-      streak: newStreak,
-      lastCheckIn: now,
-    );
-
-    await updateUser(updatedUser);
-    await addPoints(2, 'Daily check-in');
   }
 
-  void logout() {
+  Future<void> logout() async {
+    await _authService.signOut();
     _currentUser = null;
-    _authService.signOut();
     notifyListeners();
   }
 }

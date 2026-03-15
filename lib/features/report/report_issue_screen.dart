@@ -7,15 +7,12 @@ import 'dart:io';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/report_provider.dart';
-import '../../models/report_model.dart';
 import '../../services/location_service.dart';
-import '../../services/storage_service.dart';
 import '../../core/theme/app_colors.dart';
 // ignore: unused_import
 import '../../core/widgets/primary_button.dart';
 // ignore: unused_import
 import '../../core/constants/app_constants.dart';
-import 'package:uuid/uuid.dart';
 
 class ReportIssueScreen extends StatefulWidget {
   const ReportIssueScreen({super.key});
@@ -28,7 +25,6 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _descriptionController = TextEditingController();
   final LocationService _locationService = LocationService();
-  final StorageService _storageService = StorageService();
   final ImagePicker _picker = ImagePicker();
   late AnimationController _pulseController;
 
@@ -231,41 +227,18 @@ class _ReportIssueScreenState extends State<ReportIssueScreen>
     setState(() => _isLoading = true);
 
     try {
-      final userProvider = context.read<UserProvider>();
-      final user = userProvider.currentUser;
-
-      if (user == null) return;
-
-      // Upload image if selected
-      String? imageUrl;
-      if (_selectedImage != null) {
-        imageUrl = await _storageService.uploadImage(_selectedImage!, 'reports');
-      }
-
-      // Create report
-      final report = ReportModel(
-        id: const Uuid().v4(),
-        userId: user.uid,
-        userName: user.name ?? 'User',
+      // Create report via API (handles image upload as multipart)
+      await context.read<ReportProvider>().createReport(
         issueType: _selectedIssueType!,
         description: _descriptionController.text,
         latitude: _latitude!,
         longitude: _longitude!,
         address: _address,
-        imageUrl: imageUrl,
-        createdAt: DateTime.now(),
+        image: _selectedImage,
       );
 
-      await context.read<ReportProvider>().createReport(report);
-
-      // Award points
-      await userProvider.addPoints(5, 'Reported issue: $_selectedIssueType');
-
-      // Update user's total reports
-      final updatedUser = user.copyWith(
-        totalReports: user.totalReports + 1,
-      );
-      await userProvider.updateUser(updatedUser);
+      // Reload user profile to reflect updated points & report count
+      await context.read<UserProvider>().loadUser();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

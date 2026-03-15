@@ -1,49 +1,69 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dio/dio.dart';
+import '../core/api_client.dart';
+import '../core/storage.dart';
+import '../models/user_model.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  String? _verificationId;
+  final Dio _dio = ApiClient().dio;
+  final SecureStorageHelper _storage = SecureStorageHelper();
 
   Future<void> sendOtp({
     required String phone,
-    required Function(String) onCodeSent,
+    required Function() onSuccess,
     required Function(String) onError,
   }) async {
     try {
-      await _auth.verifyPhoneNumber(
-        phoneNumber: phone,
-        timeout: const Duration(seconds: 60),
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await _auth.signInWithCredential(credential);
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          onError(e.message ?? "OTP failed");
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          _verificationId = verificationId;
-          onCodeSent(verificationId);
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          _verificationId = verificationId;
-        },
-      );
+      final response = await _dio.post('/auth/send-otp', data: {
+        'phone_number': phone,
+      });
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        onSuccess();
+      } else {
+        onError(response.data['message'] ?? 'Failed to send OTP');
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        onError('Too many attempts. Please try again later.');
+      } else {
+        onError(e.response?.data?['message'] ?? 'Failed to send OTP');
+      }
     } catch (e) {
       onError(e.toString());
     }
   }
 
-  Future<UserCredential> verifyOtp(String otp) async {
-    final credential = PhoneAuthProvider.credential(
-      verificationId: _verificationId!,
-      smsCode: otp,
-    );
-    return await _auth.signInWithCredential(credential);
+  Future<UserModel?> verifyOtp({
+    required String phone,
+    required String otp,
+  }) async {
+    try {
+      final response = await _dio.post('/auth/verify-otp', data: {
+        'phone_number': phone,
+        'otp': otp,
+      });
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data['data'];
+        final token = data['token'] as String;
+        await _storage.saveToken(token);
+
+        if (data['user'] != null) {
+          return UserModel.fromJson(data['user']);
+        }
+      }
+      return null;
+    } on DioException catch (e) {
+      throw Exception(
+          e.response?.data?['message'] ?? 'OTP verification failed');
+    }
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
+    await _storage.clearToken();
   }
 
-  User? get currentUser => _auth.currentUser;
+  Future<bool> isLoggedIn() async {
+    return await _storage.hasToken();
+  }
 }

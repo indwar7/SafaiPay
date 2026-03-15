@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class BookingModel {
   final String id;
   final String userId;
@@ -15,6 +13,8 @@ class BookingModel {
   final double? weight;
   final int? pointsEarned;
   final String? imageUrl;
+  final double? latitude;
+  final double? longitude;
   final DateTime createdAt;
 
   BookingModel({
@@ -32,46 +32,45 @@ class BookingModel {
     this.weight,
     this.pointsEarned,
     this.imageUrl,
+    this.latitude,
+    this.longitude,
     required this.createdAt,
   });
 
-  factory BookingModel.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map<String, dynamic>;
+  factory BookingModel.fromJson(Map<String, dynamic> json) {
     return BookingModel(
-      id: doc.id,
-      userId: data['userId'] ?? '',
-      userName: data['userName'] ?? '',
-      phoneNumber: data['phoneNumber'] ?? '',
-      address: data['address'] ?? '',
-      wasteType: data['wasteType'] ?? '',
-      bookingDate: (data['bookingDate'] as Timestamp).toDate(),
-      timeSlot: data['timeSlot'] ?? '',
-      status: data['status'] ?? 'pending',
-      collectorId: data['collectorId'],
-      collectorName: data['collectorName'],
-      weight: data['weight']?.toDouble(),
-      pointsEarned: data['pointsEarned'],
-      imageUrl: data['imageUrl'],
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      id: json['id'] ?? '',
+      userId: json['user_id'] ?? json['userId'] ?? '',
+      userName: json['user_name'] ?? json['userName'] ?? '',
+      phoneNumber: json['phone_number'] ?? json['phoneNumber'] ?? '',
+      address: json['address'] ?? '',
+      wasteType: json['waste_type'] ?? json['wasteType'] ?? '',
+      bookingDate: json['booking_date'] != null
+          ? DateTime.parse(json['booking_date'])
+          : DateTime.now(),
+      timeSlot: json['time_slot'] ?? json['timeSlot'] ?? '',
+      status: json['status'] ?? 'pending',
+      collectorId: json['collector_id'] ?? json['collectorId'],
+      collectorName: json['collector_name'] ?? json['collectorName'],
+      weight: json['weight']?.toDouble(),
+      pointsEarned: json['points_earned'] ?? json['pointsEarned'],
+      imageUrl: json['image_url'] ?? json['imageUrl'],
+      latitude: json['latitude']?.toDouble(),
+      longitude: json['longitude']?.toDouble(),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
-      'userId': userId,
-      'userName': userName,
-      'phoneNumber': phoneNumber,
+      'waste_type': wasteType,
+      'booking_date': bookingDate.toIso8601String(),
+      'time_slot': timeSlot,
       'address': address,
-      'wasteType': wasteType,
-      'bookingDate': Timestamp.fromDate(bookingDate),
-      'timeSlot': timeSlot,
-      'status': status,
-      'collectorId': collectorId,
-      'collectorName': collectorName,
-      'weight': weight,
-      'pointsEarned': pointsEarned,
-      'imageUrl': imageUrl,
-      'createdAt': Timestamp.fromDate(createdAt),
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 }

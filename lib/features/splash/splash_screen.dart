@@ -5,6 +5,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../routes/app_routes.dart';
+import '../../services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -98,10 +99,15 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     setState(() => _showLoader = true);
 
-    // Navigate
+    // Check auth and navigate
     await Future.delayed(const Duration(milliseconds: 1000));
     if (mounted) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.mainApp);
+      final isLoggedIn = await AuthService().isLoggedIn();
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed(
+          isLoggedIn ? AppRoutes.mainApp : AppRoutes.login,
+        );
+      }
     }
   }
 

@@ -4,12 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/booking_provider.dart';
-import '../../models/booking_model.dart';
 import '../../core/theme/app_colors.dart';
 // ignore: unused_import
 import '../../core/widgets/primary_button.dart';
 import '../../core/constants/app_constants.dart';
-import 'package:uuid/uuid.dart';
 
 class BookPickupScreen extends StatefulWidget {
   const BookPickupScreen({super.key});
@@ -79,32 +77,19 @@ class _BookPickupScreenState extends State<BookPickupScreen> {
     }
 
     setState(() => _isLoading = true);
-
+    final bookingProvider = context.read<BookingProvider>();
     final userProvider = context.read<UserProvider>();
-    final user = userProvider.currentUser;
-
-    if (user == null) return;
-
-    final booking = BookingModel(
-      id: const Uuid().v4(),
-      userId: user.uid,
-      userName: user.name ?? 'User',
-      phoneNumber: user.phoneNumber,
-      address: _addressController.text,
-      wasteType: _selectedWasteType!,
-      bookingDate: _selectedDate!,
-      timeSlot: _selectedTimeSlot!,
-      createdAt: DateTime.now(),
-    );
 
     try {
-      await context.read<BookingProvider>().createBooking(booking);
-
-      // Update user's total bookings
-      final updatedUser = user.copyWith(
-        totalBookings: user.totalBookings + 1,
+      await bookingProvider.createBooking(
+        wasteType: _selectedWasteType!,
+        bookingDate: _selectedDate!,
+        timeSlot: _selectedTimeSlot!,
+        address: _addressController.text,
       );
-      await userProvider.updateUser(updatedUser);
+
+      // Reload user profile to reflect updated booking count
+      await userProvider.loadUser();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -116,12 +101,14 @@ class _BookPickupScreenState extends State<BookPickupScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to book pickup: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to book pickup: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     } finally {
       setState(() => _isLoading = false);
     }

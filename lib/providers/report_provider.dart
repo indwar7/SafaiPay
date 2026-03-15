@@ -1,6 +1,7 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../models/report_model.dart';
-import '../services/firestore_service.dart';
+import '../services/api_service.dart';
 
 class ReportProvider with ChangeNotifier {
   List<ReportModel> _reports = [];
@@ -11,15 +12,15 @@ class ReportProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  final FirestoreService _firestoreService = FirestoreService();
+  final ApiService _apiService = ApiService();
 
-  Future<void> loadUserReports(String userId) async {
+  Future<void> loadUserReports({String? status, int page = 1}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _reports = await _firestoreService.getUserReports(userId);
+      _reports = await _apiService.getReports(status: status, page: page);
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -34,7 +35,7 @@ class ReportProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _reports = await _firestoreService.getAllReports();
+      _reports = await _apiService.getReports(limit: 100);
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -43,13 +44,29 @@ class ReportProvider with ChangeNotifier {
     }
   }
 
-  Future<void> createReport(ReportModel report) async {
+  Future<void> createReport({
+    required String issueType,
+    required String description,
+    required double latitude,
+    required double longitude,
+    required String address,
+    File? image,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _firestoreService.createReport(report);
-      _reports.insert(0, report);
+      final report = await _apiService.createReport(
+        issueType: issueType,
+        description: description,
+        latitude: latitude,
+        longitude: longitude,
+        address: address,
+        image: image,
+      );
+      if (report != null) {
+        _reports.insert(0, report);
+      }
     } catch (e) {
       _error = e.toString();
     } finally {

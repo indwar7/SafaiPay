@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/booking_model.dart';
-import '../services/firestore_service.dart';
+import '../services/api_service.dart';
 
 class BookingProvider with ChangeNotifier {
   List<BookingModel> _bookings = [];
@@ -11,15 +11,15 @@ class BookingProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  final FirestoreService _firestoreService = FirestoreService();
+  final ApiService _apiService = ApiService();
 
-  Future<void> loadUserBookings(String userId) async {
+  Future<void> loadUserBookings({String? status, int page = 1}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _bookings = await _firestoreService.getUserBookings(userId);
+      _bookings = await _apiService.getBookings(status: status, page: page);
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -28,13 +28,29 @@ class BookingProvider with ChangeNotifier {
     }
   }
 
-  Future<void> createBooking(BookingModel booking) async {
+  Future<void> createBooking({
+    required String wasteType,
+    required DateTime bookingDate,
+    required String timeSlot,
+    required String address,
+    double? latitude,
+    double? longitude,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _firestoreService.createBooking(booking);
-      _bookings.insert(0, booking);
+      final booking = await _apiService.createBooking(
+        wasteType: wasteType,
+        bookingDate: bookingDate,
+        timeSlot: timeSlot,
+        address: address,
+        latitude: latitude,
+        longitude: longitude,
+      );
+      if (booking != null) {
+        _bookings.insert(0, booking);
+      }
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -45,7 +61,7 @@ class BookingProvider with ChangeNotifier {
 
   Future<void> cancelBooking(String bookingId) async {
     try {
-      await _firestoreService.updateBookingStatus(bookingId, 'cancelled');
+      await _apiService.cancelBooking(bookingId);
       _bookings = _bookings
           .map((b) => b.id == bookingId
               ? BookingModel(

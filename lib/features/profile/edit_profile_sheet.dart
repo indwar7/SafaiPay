@@ -53,12 +53,11 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     final currentUser = userProvider.currentUser;
 
     if (currentUser != null) {
-      final updated = currentUser.copyWith(
+      await userProvider.updateUser(
         name: name,
         ward: _wardController.text.trim(),
         address: _addressController.text.trim(),
       );
-      await userProvider.updateUser(updated);
     }
 
     if (mounted) {

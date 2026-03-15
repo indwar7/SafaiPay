@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/api_client.dart';
 import 'routes/app_routes.dart';
 import 'providers/user_provider.dart';
 import 'providers/booking_provider.dart';
@@ -32,7 +33,8 @@ class GarbageApp extends StatelessWidget {
         title: 'SafaiPay',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
-        initialRoute: AppRoutes.mainApp,
+        navigatorKey: ApiClient.navigatorKey,
+        initialRoute: AppRoutes.splash,
         onGenerateRoute: AppRoutes.onGenerateRoute,
       ),
     );

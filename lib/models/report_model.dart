@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class ReportModel {
   final String id;
   final String userId;
@@ -10,7 +8,7 @@ class ReportModel {
   final double longitude;
   final String address;
   final String? imageUrl;
-  final String status; // pending, resolved, rejected
+  final String status; // pending, assigned, resolved
   final int pointsEarned;
   final DateTime createdAt;
 
@@ -29,37 +27,22 @@ class ReportModel {
     required this.createdAt,
   });
 
-  factory ReportModel.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map<String, dynamic>;
+  factory ReportModel.fromJson(Map<String, dynamic> json) {
     return ReportModel(
-      id: doc.id,
-      userId: data['userId'] ?? '',
-      userName: data['userName'] ?? '',
-      issueType: data['issueType'] ?? '',
-      description: data['description'] ?? '',
-      latitude: data['latitude']?.toDouble() ?? 0.0,
-      longitude: data['longitude']?.toDouble() ?? 0.0,
-      address: data['address'] ?? '',
-      imageUrl: data['imageUrl'],
-      status: data['status'] ?? 'pending',
-      pointsEarned: data['pointsEarned'] ?? 5,
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      id: json['id'] ?? '',
+      userId: json['user_id'] ?? json['userId'] ?? '',
+      userName: json['user_name'] ?? json['userName'] ?? '',
+      issueType: json['issue_type'] ?? json['issueType'] ?? '',
+      description: json['description'] ?? '',
+      latitude: (json['latitude'] ?? 0).toDouble(),
+      longitude: (json['longitude'] ?? 0).toDouble(),
+      address: json['address'] ?? '',
+      imageUrl: json['image_url'] ?? json['imageUrl'],
+      status: json['status'] ?? 'pending',
+      pointsEarned: json['points_earned'] ?? json['pointsEarned'] ?? 5,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'userId': userId,
-      'userName': userName,
-      'issueType': issueType,
-      'description': description,
-      'latitude': latitude,
-      'longitude': longitude,
-      'address': address,
-      'imageUrl': imageUrl,
-      'status': status,
-      'pointsEarned': pointsEarned,
-      'createdAt': Timestamp.fromDate(createdAt),
-    };
   }
 }

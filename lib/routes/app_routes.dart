@@ -33,7 +33,6 @@ class AppRoutes {
         final args = settings.arguments as Map<String, dynamic>;
         return _buildRoute(
           OTPVerificationScreen(
-            verificationId: args['verificationId'],
             phoneNumber: args['phoneNumber'],
           ),
           settings,

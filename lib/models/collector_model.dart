@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class CollectorModel {
   final String id;
   final String name;
@@ -19,27 +17,18 @@ class CollectorModel {
     required this.createdAt,
   });
 
-  factory CollectorModel.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map<String, dynamic>;
+  factory CollectorModel.fromJson(Map<String, dynamic> json) {
     return CollectorModel(
-      id: doc.id,
-      name: data['name'] ?? '',
-      phoneNumber: data['phoneNumber'] ?? '',
-      ward: data['ward'] ?? '',
-      isAvailable: data['isAvailable'] ?? true,
-      totalCollections: data['totalCollections'] ?? 0,
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      phoneNumber: json['phone_number'] ?? json['phoneNumber'] ?? '',
+      ward: json['ward'] ?? '',
+      isAvailable: json['is_available'] ?? json['isAvailable'] ?? true,
+      totalCollections:
+          json['total_collections'] ?? json['totalCollections'] ?? 0,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'phoneNumber': phoneNumber,
-      'ward': ward,
-      'isAvailable': isAvailable,
-      'totalCollections': totalCollections,
-      'createdAt': Timestamp.fromDate(createdAt),
-    };
   }
 }
