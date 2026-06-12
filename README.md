@@ -16,44 +16,39 @@ SafaiPay is a **comprehensive Flutter + Firebase civic-tech platform** that ince
   - Quick actions (Report, Book, Check-in, Rewards)
   - Impact tracker with progress bars
   - Community rank card
+    
 - **Report Cleanliness Issues**
   - Camera capture
   - Auto GPS location
   - Issue categorization
   - +5 points per report
+    
 -  **Book Garbage Pickup**
   - Schedule date & time
   - Select waste type
   - Track status
   - Collector assignment
+-
 -  **City Cleanliness Map**
   - Google Maps integration
   - Report markers (red = pending, green = resolved)
   - Real-time location
--  **SafaiPay Wallet**
+-
+-   **SafaiPay Wallet**
   - Points management
   - Redeem points to wallet
   - Withdraw to bank (Razorpay)
   - Transaction history
+-
 - **Rewards & Leaderboard**
   - Unlock badges
   - Ward-level rankings
   - Community competition
--  **Profile & Settings**
+-
+-   **Profile & Settings**
   - User stats
   - Streak tracking
   - Account management
-
-### 🎨 **Design Highlights**
-
-- Modern glassmorphism UI
-- Smooth animations throughout
-- Professional green & white color palette
-- Google Fonts (Poppins + Inter)
-- Shimmer loading effects
-- Micro-interactions
-
----
 
 ## 🛠️ Tech Stack
 
