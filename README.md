@@ -6,40 +6,40 @@ SafaiPay is a **comprehensive Flutter + Firebase civic-tech platform** that ince
 
 ---
 
-## 🚀 Features
+##  Features
 
-### 👤 **User Features**
+###  **User Features**
 
-- ✅ **Phone OTP Authentication** (Firebase Auth)
-- ✅ **Premium Animated Home Dashboard**
+-  **Phone OTP Authentication** (Firebase Auth)
+-  **Premium Animated Home Dashboard**
   - Wallet card with points & balance
   - Quick actions (Report, Book, Check-in, Rewards)
   - Impact tracker with progress bars
   - Community rank card
-- ✅ **Report Cleanliness Issues**
+- **Report Cleanliness Issues**
   - Camera capture
   - Auto GPS location
   - Issue categorization
   - +5 points per report
-- ✅ **Book Garbage Pickup**
+-  **Book Garbage Pickup**
   - Schedule date & time
   - Select waste type
   - Track status
   - Collector assignment
-- ✅ **City Cleanliness Map**
+-  **City Cleanliness Map**
   - Google Maps integration
   - Report markers (red = pending, green = resolved)
   - Real-time location
-- ✅ **SafaiPay Wallet**
+-  **SafaiPay Wallet**
   - Points management
   - Redeem points to wallet
   - Withdraw to bank (Razorpay)
   - Transaction history
-- ✅ **Rewards & Leaderboard**
+- **Rewards & Leaderboard**
   - Unlock badges
   - Ward-level rankings
   - Community competition
-- ✅ **Profile & Settings**
+-  **Profile & Settings**
   - User stats
   - Streak tracking
   - Account management
@@ -331,7 +331,7 @@ Splash → Onboarding → Login → OTP → Home Dashboard
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 This is a complete MVP ready for production deployment. To contribute:
 
@@ -345,19 +345,15 @@ This is a complete MVP ready for production deployment. To contribute:
 
 ## 📄 License
 
-MIT License - Free to use for civic projects
+MIT License - Free to use for civic project
 
----
-
-## 👨‍💻 Developed By
-
-**Built with ❤️ using Flutter**
+**Built using Flutter**
 
 For support: Open an issue on GitHub
 
 ---
 
-## 🎉 What's Next?
+##  What's Next?
 
 - [ ] Admin panel for municipalities
 - [ ] Garbage collector app
